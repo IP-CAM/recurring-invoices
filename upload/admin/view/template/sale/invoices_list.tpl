@@ -1,0 +1,1 @@
+/var/www/html/sub5.gadix.net/opencart/upload/admin/view/template/sale/invoices_list.tpl
