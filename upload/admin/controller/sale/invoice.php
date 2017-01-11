@@ -379,7 +379,7 @@ class ControllerSaleInvoice extends Controller {
 		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['footer'] = $this->load->controller('common/footer');
 
-		$this->response->setOutput($this->load->view('sale/invoice_list', $data));
+		$this->response->setOutput($this->load->view('sale/invoices_list', $data));
 	}
 
 	public function getForm() {
