@@ -1,13 +1,13 @@
 <?php
 // Heading
-$_['heading_title']              = 'Orders';
+$_['heading_title']              = 'Invoices';
 
 // Text
-$_['text_success']               = 'Success: You have modified orders!';
-$_['text_list']                  = 'Order List';
-$_['text_add']                   = 'Add Order';
-$_['text_edit']                  = 'Edit Order';
-$_['text_order_detail']          = 'Order Details';
+$_['text_success']               = 'Success: You have modified invoices!';
+$_['text_list']                  = 'Invoice List';
+$_['text_add']                   = 'Add Invoice';
+$_['text_edit']                  = 'Edit Invoice';
+$_['text_invoice_detail']          = 'Invoice Details';
 $_['text_customer_detail']       = 'Customer Details';
 $_['text_option']                = 'Options';
 $_['text_store']                 = 'Store';
@@ -21,12 +21,12 @@ $_['text_telephone']             = 'Telephone';
 $_['text_invoice']               = 'Invoice';
 $_['text_reward']                = 'Reward Points';
 $_['text_affiliate']             = 'Affiliate';
-$_['text_order']                 = 'Order (#%s)';
+$_['text_invoice']                 = 'Invoice (#%s)';
 $_['text_payment_address']       = 'Payment Address';
 $_['text_shipping_address']      = 'Shipping Address';
 $_['text_comment']               = 'Customer Comment';
-$_['text_history']               = 'Order History';
-$_['text_history_add']           = 'Add Order History';
+$_['text_history']               = 'Invoice History';
+$_['text_history_add']           = 'Add Invoice History';
 $_['text_account_custom_field']  = 'Account Custom Fields';
 $_['text_payment_custom_field']  = 'Payment Address Custom Fields';
 $_['text_shipping_custom_field'] = 'Shipping Address Custom Fields';
@@ -35,7 +35,7 @@ $_['text_ip']                    = 'IP Address';
 $_['text_forwarded_ip']          = 'Forwarded IP';
 $_['text_user_agent']            = 'User Agent';
 $_['text_accept_language']       = 'Accept Language';
-$_['text_order_id']              = 'Order ID:';
+$_['text_invoice_id']              = 'Invoice ID:';
 $_['text_fax']                   = 'Fax:';
 $_['text_website']               = 'Web Site:';
 $_['text_invoice_no']            = 'Invoice No.:';
@@ -46,7 +46,7 @@ $_['text_ean']                   = 'EAN:';
 $_['text_jan']                   = 'JAN:';
 $_['text_isbn']                  = 'ISBN:';
 $_['text_mpn']                   = 'MPN:';
-$_['text_missing']               = 'Missing Orders';
+$_['text_missing']               = 'Missing Invoices';
 $_['text_default']               = 'Default';
 $_['text_product']               = 'Add Product(s)';
 $_['text_voucher']               = 'Add Voucher(s)';
@@ -61,11 +61,14 @@ $_['text_upload']                = 'Your file was successfully uploaded!';
 $_['text_picklist']              = 'Dispatch Note';
 
 // Column
-$_['column_order_id']            = 'Order ID';
+$_['column_invoice_id']            = 'ID';
+$_['column_invoice_number']        = 'Number';
 $_['column_customer']            = 'Customer';
 $_['column_status']              = 'Status';
 $_['column_date_added']          = 'Date Added';
-$_['column_date_modified']       = 'Date Modified';
+$_['column_date_expire']         = 'Expire ';
+$_['column_date_payed']         = 'Date Payed ';
+$_['column_fact_period']         = 'Facturation Period ';
 $_['column_total']               = 'Total';
 $_['column_product']             = 'Product';
 $_['column_model']               = 'Model';
@@ -107,7 +110,7 @@ $_['entry_theme']                = 'Gift Certificate Theme';
 $_['entry_message']              = 'Message';
 $_['entry_amount']               = 'Amount';
 $_['entry_affiliate']            = 'Affiliate';
-$_['entry_order_status']         = 'Order Status';
+$_['entry_iinvoice_status']         = 'Invoice Status';
 $_['entry_notify']               = 'Notify Customer';
 $_['entry_override']             = 'Override';
 $_['entry_comment']              = 'Comment';
@@ -117,16 +120,20 @@ $_['entry_payment_method']       = 'Payment Method';
 $_['entry_coupon']               = 'Coupon';
 $_['entry_voucher']              = 'Voucher';
 $_['entry_reward']               = 'Reward';
-$_['entry_order_id']             = 'Order ID';
+$_['entry_invoice_id']             = 'Invoice ID';
 $_['entry_total']                = 'Total';
 $_['entry_date_added']           = 'Date Added';
 $_['entry_date_modified']        = 'Date Modified';
+$_['entry_date_expire']           = 'Date Expire';
+$_['entry_date_payed']           = 'Date Payed';
+$_['entry_fact_period']           = 'Facturation Period';
+$_['entry_insert_status']           = 'Invoice Status';
 
 // Help
 $_['help_override']              = 'If the customers order is being blocked from changing the order status due to an anti-fraud extension enable override.';
 
 // Error
 $_['error_warning']              = 'Warning: Please check the form carefully for errors!';
-$_['error_permission']           = 'Warning: You do not have permission to modify orders!';
+$_['error_permission']           = 'Warning: You do not have permission to modify invoices!';
 $_['error_action']               = 'Warning: Could not complete this action!';
 $_['error_filetype']             = 'Invalid file type!';

@@ -49,8 +49,12 @@ class ControllerSaleInvoice extends Controller {
 			$url = '';
 
 			if (isset($this->request->get['filter_invoice_id'])) {
-				$url .= '&filter_invoice_id=' . $this->request->get['filter_invoice_id'];
+				$url .= '&filter_invoice_number=' . $this->request->get['filter_invoice_number'];
 			}
+
+                        if (isset($this->request->get['filter_invoice_number'])) {
+                                $url .= '&filter_invoice_number=' . $this->request->get['filter_invoice_number'];
+                        }
 	
 			if (isset($this->request->get['filter_customer'])) {
 				$url .= '&filter_customer=' . urlencode(html_entity_decode($this->request->get['filter_customer'], ENT_QUOTES, 'UTF-8'));
@@ -68,9 +72,14 @@ class ControllerSaleInvoice extends Controller {
 				$url .= '&filter_date_added=' . $this->request->get['filter_date_added'];
 			}
 	
-			if (isset($this->request->get['filter_date_modified'])) {
-				$url .= '&filter_date_modified=' . $this->request->get['filter_date_modified'];
+			if (isset($this->request->get['filter_date_expire'])) {
+				$url .= '&filter_date_expire=' . $this->request->get['filter_date_expire'];
 			}
+
+                        if (isset($this->request->get['filter_date_payed'])) {
+                                $url .= '&filter_date_payed=' . $this->request->get['filter_date_payed'];
+                        }
+
 
 			$this->response->redirect($this->url->link('sale/invoice', 'token=' . $this->session->data['token'] . $url, true));
 		}
@@ -80,10 +89,17 @@ class ControllerSaleInvoice extends Controller {
 	
 	protected function getList() {
 		if (isset($this->request->get['filter_invoice_id'])) {
-			$filter_order_id = $this->request->get['filter_invoice_id'];
+			$filter_invoice_id = $this->request->get['filter_invoice_id'];
 		} else {
-			$filter_order_id = null;
+			$filter_invoice_id = null;
 		}
+
+                if (isset($this->request->get['filter_invoice_number'])) {
+                        $filter_invoice_number = $this->request->get['filter_invoice_number'];
+                } else {
+                        $filter_invoice_number = null;
+                }
+
 
 		if (isset($this->request->get['filter_customer'])) {
 			$filter_customer = $this->request->get['filter_customer'];
@@ -92,9 +108,9 @@ class ControllerSaleInvoice extends Controller {
 		}
 
 		if (isset($this->request->get['filter_invoice_status'])) {
-			$filter_order_status = $this->request->get['filter_invoice_status'];
+			$filter_invoice_status = $this->request->get['filter_invoice_status'];
 		} else {
-			$filter_order_status = null;
+			$filter_invoice_status = null;
 		}
 
 		if (isset($this->request->get['filter_total'])) {
@@ -109,11 +125,18 @@ class ControllerSaleInvoice extends Controller {
 			$filter_date_added = null;
 		}
 
-		if (isset($this->request->get['filter_date_modified'])) {
-			$filter_date_modified = $this->request->get['filter_date_modified'];
+		if (isset($this->request->get['filter_date_expire'])) {
+			$filter_date_expire = $this->request->get['filter_date_expire'];
 		} else {
-			$filter_date_modified = null;
+			$filter_date_expire = null;
 		}
+
+                if (isset($this->request->get['filter_date_payed'])) {
+                        $filter_date_payed= $this->request->get['filter_date_payed'];
+                } else {
+                        $filter_date_payed= null;
+                }
+
 
 		if (isset($this->request->get['sort'])) {
 			$sort = $this->request->get['sort'];
@@ -139,6 +162,11 @@ class ControllerSaleInvoice extends Controller {
 			$url .= '&filter_invoice_id=' . $this->request->get['filter_invoice_id'];
 		}
 
+                if (isset($this->request->get['filter_invoice_number'])) {
+                        $url .= '&filter_invoice_number=' . $this->request->get['filter_invoice_number'];
+                }
+
+
 		if (isset($this->request->get['filter_customer'])) {
 			$url .= '&filter_customer=' . urlencode(html_entity_decode($this->request->get['filter_customer'], ENT_QUOTES, 'UTF-8'));
 		}
@@ -155,9 +183,14 @@ class ControllerSaleInvoice extends Controller {
 			$url .= '&filter_date_added=' . $this->request->get['filter_date_added'];
 		}
 
-		if (isset($this->request->get['filter_date_modified'])) {
-			$url .= '&filter_date_modified=' . $this->request->get['filter_date_modified'];
+		if (isset($this->request->get['filter_date_expire'])) {
+			$url .= '&filter_date_expire=' . $this->request->get['filter_date_expire'];
 		}
+
+                if (isset($this->request->get['filter_date_payed'])) {
+                        $url .= '&filter_date_payed=' . $this->request->get['filter_date_payed'];
+                }
+
 
 		if (isset($this->request->get['sort'])) {
 			$url .= '&sort=' . $this->request->get['sort'];
@@ -184,7 +217,7 @@ class ControllerSaleInvoice extends Controller {
 		);
 
 		$data['invoice'] = $this->url->link('sale/invoice/invoice', 'token=' . $this->session->data['token'], true);
-		$data['shipping'] = $this->url->link('sale/order/shipping', 'token=' . $this->session->data['token'], true);
+		//$data['shipping'] = $this->url->link('sale/order/shipping', 'token=' . $this->session->data['token'], true);
 		$data['add'] = $this->url->link('sale/invoice/add', 'token=' . $this->session->data['token'], true);
 		$data['delete'] = $this->url->link('sale/invoice/delete', 'token=' . $this->session->data['token'], true);
 
@@ -192,11 +225,13 @@ class ControllerSaleInvoice extends Controller {
 
 		$filter_data = array(
 			'filter_invoice_id'      => $filter_invoice_id,
+                        'filter_invoice_number'      => $filter_invoice_number,
 			'filter_customer'	   => $filter_customer,
 			'filter_invoice_status'  => $filter_invoice_status,
 			'filter_total'         => $filter_total,
 			'filter_date_added'    => $filter_date_added,
-			'filter_date_modified' => $filter_date_modified,
+			'filter_date_expire' => $filter_date_expire,
+                        'filter_date_payed' => $filter_date_payed,
 			'sort'                 => $sort,
 			'order'                => $order,
 			'start'                => ($page - 1) * $this->config->get('config_limit_admin'),
@@ -204,19 +239,27 @@ class ControllerSaleInvoice extends Controller {
 		);
 
 		//$order_total = $this->model_sale_invoice->getTotalOrders($filter_data);
-
+                
+                $invoice_total = $this->model_sale_invoice->getTotalInvoices($filter_data);
 		$results = $this->model_sale_invoice->getInvoices($filter_data);
-
+                //only using one currency (Euro), so set this value to 1
+                //$result['currency_value']=1;
 		foreach ($results as $result) {
-			$data['orders'][] = array(
+                        $result['currency_value']=1;
+			$data['invoices'][] = array(
 				'invoice_id'      => $result['invoice_id'],
+                                'invoice_number'      => $result['invoiceNumber'],
 				'customer'      => $result['customer'],
-				'invoice_status'  => $result['invoice_status'] ? $result['invoice_status'] : $this->language->get('text_missing'),
-				'total'         => $this->currency->format($result['total'], $result['currency_code'], $result['currency_value']),
+				'invoice_status'  => $result['status_id'] ? $result['status_id'] : $this->language->get('text_missing'),
+				'total'         => $this->currency->format($result['amount'], $this->config->get('config_currency'), $result['currency_value']),
 				'date_added'    => date($this->language->get('date_format_short'), strtotime($result['date_added'])),
-				'date_modified' => date($this->language->get('date_format_short'), strtotime($result['date_modified'])),
-				'view'          => $this->url->link('sale/invoice/info', 'token=' . $this->session->data['token'] . '&order_id=' . $result['order_id'] . $url, true),
-				'edit'          => $this->url->link('sale/invoice/edit', 'token=' . $this->session->data['token'] . '&order_id=' . $result['order_id'] . $url, true)
+				'date_payed' => date($this->language->get('date_format_short'), strtotime($result['datePayed'])),
+                                'date_expire' => date($this->language->get('date_format_short'), strtotime($result['dateExpire'])),
+                                'date_payed' => date($this->language->get('date_format_short'), strtotime($result['datePayed'])),
+                                'fact_period' => $result['factPeriod'],
+                                
+				'view'          => $this->url->link('sale/invoice/info', 'token=' . $this->session->data['token'] . '&invoice_id=' . $result['invoice_id'] . $url, true),
+				'edit'          => $this->url->link('sale/invoice/edit', 'token=' . $this->session->data['token'] . '&invoice_id=' . $result['invoice_id'] . $url, true)
 			);
 		}
 
@@ -228,20 +271,26 @@ class ControllerSaleInvoice extends Controller {
 		$data['text_missing'] = $this->language->get('text_missing');
 		$data['text_loading'] = $this->language->get('text_loading');
 
-		$data['column_order_id'] = $this->language->get('column_order_id');
+		$data['column_invoice_id'] = $this->language->get('column_invoice_id');
+                $data['column_invoice_number'] = $this->language->get('column_invoice_number');
 		$data['column_customer'] = $this->language->get('column_customer');
 		$data['column_status'] = $this->language->get('column_status');
 		$data['column_total'] = $this->language->get('column_total');
 		$data['column_date_added'] = $this->language->get('column_date_added');
-		$data['column_date_modified'] = $this->language->get('column_date_modified');
+		$data['column_date_expire'] = $this->language->get('column_date_expire');
+                $data['column_date_payed'] = $this->language->get('column_date_payed');
+                $data['column_fact_period'] = $this->language->get('column_fact_period');
 		$data['column_action'] = $this->language->get('column_action');
 
-		$data['entry_order_id'] = $this->language->get('entry_order_id');
+		$data['entry_invoice_id'] = $this->language->get('entry_invoice_id');
 		$data['entry_customer'] = $this->language->get('entry_customer');
-		$data['entry_order_status'] = $this->language->get('entry_order_status');
+		$data['entry_invoice_status'] = $this->language->get('entry_insert_status');
 		$data['entry_total'] = $this->language->get('entry_total');
 		$data['entry_date_added'] = $this->language->get('entry_date_added');
-		$data['entry_date_modified'] = $this->language->get('entry_date_modified');
+		$data['entry_date_expire'] = $this->language->get('entry_date_expire');
+                $data['entry_date_payed'] = $this->language->get('entry_date_payed');
+                $data['fact_period'] = $this->language->get('fact_period');
+
 
 		$data['button_invoice_print'] = $this->language->get('button_invoice_print');
 		$data['button_shipping_print'] = $this->language->get('button_shipping_print');
@@ -280,6 +329,10 @@ class ControllerSaleInvoice extends Controller {
 			$url .= '&filter_invoice_id=' . $this->request->get['filter_invoice_id'];
 		}
 
+                if (isset($this->request->get['filter_invoice_number'])) {
+                        $url .= '&filter_invoice_number=' . $this->request->get['filter_invoice_number'];
+                }
+
 		if (isset($this->request->get['filter_customer'])) {
 			$url .= '&filter_customer=' . urlencode(html_entity_decode($this->request->get['filter_customer'], ENT_QUOTES, 'UTF-8'));
 		}
@@ -296,9 +349,13 @@ class ControllerSaleInvoice extends Controller {
 			$url .= '&filter_date_added=' . $this->request->get['filter_date_added'];
 		}
 
-		if (isset($this->request->get['filter_date_modified'])) {
-			$url .= '&filter_date_modified=' . $this->request->get['filter_date_modified'];
+		if (isset($this->request->get['filter_date_expire'])) {
+			$url .= '&filter_date_expire=' . $this->request->get['filter_date_expire'];
 		}
+
+                if (isset($this->request->get['filter_date_payed'])) {
+                        $url .= '&filter_date_payed=' . $this->request->get['filter_date_payed'];
+                }
 
 		if ($order == 'ASC') {
 			$url .= '&order=DESC';
@@ -311,17 +368,24 @@ class ControllerSaleInvoice extends Controller {
 		}
 
 		$data['sort_order'] = $this->url->link('sale/invoice', 'token=' . $this->session->data['token'] . '&sort=o.invoice_id' . $url, true);
+                $data['sort_invoice_number'] = $this->url->link('sale/invoice', 'token=' . $this->session->data['token'] . '&sort=o.invoice_number' . $url, true);
+
 		$data['sort_customer'] = $this->url->link('sale/invoice', 'token=' . $this->session->data['token'] . '&sort=customer' . $url, true);
-		$data['sort_status'] = $this->url->link('sale/invoice', 'token=' . $this->session->data['token'] . '&sort=invoice_status' . $url, true);
+		$data['sort_status'] = $this->url->link('sale/invoice', 'token=' . $this->session->data['token'] . '&sort=o.invoice_status' . $url, true);
 		$data['sort_total'] = $this->url->link('sale/invoice', 'token=' . $this->session->data['token'] . '&sort=o.total' . $url, true);
 		$data['sort_date_added'] = $this->url->link('sale/invoice', 'token=' . $this->session->data['token'] . '&sort=o.date_added' . $url, true);
-		$data['sort_date_modified'] = $this->url->link('sale/invoice', 'token=' . $this->session->data['token'] . '&sort=o.date_modified' . $url, true);
-
+		$data['sort_date_expire'] = $this->url->link('sale/invoice', 'token=' . $this->session->data['token'] . '&sort=o.date_expire' . $url, true);
+                $data['sort_date_payed'] = $this->url->link('sale/invoice', 'token=' . $this->session->data['token'] . '&sort=o.date_àyed' . $url, true);
 		$url = '';
 
 		if (isset($this->request->get['filter_invoice_id'])) {
 			$url .= '&filter_invoice_id=' . $this->request->get['filter_invoice_id'];
 		}
+
+                if (isset($this->request->get['filter_invoice_number'])) {
+                        $url .= '&filter_invoice_number=' . $this->request->get['filter_invoice_number'];
+                }
+
 
 		if (isset($this->request->get['filter_customer'])) {
 			$url .= '&filter_customer=' . urlencode(html_entity_decode($this->request->get['filter_customer'], ENT_QUOTES, 'UTF-8'));
@@ -339,9 +403,13 @@ class ControllerSaleInvoice extends Controller {
 			$url .= '&filter_date_added=' . $this->request->get['filter_date_added'];
 		}
 
-		if (isset($this->request->get['filter_date_modified'])) {
-			$url .= '&filter_date_modified=' . $this->request->get['filter_date_modified'];
+		if (isset($this->request->get['filter_date_expire'])) {
+			$url .= '&filter_date_expire=' . $this->request->get['filter_date_expire'];
 		}
+
+                if (isset($this->request->get['filter_date_payed'])) {
+                        $url .= '&filter_date_payed=' . $this->request->get['filter_date_payed'];
+                }
 
 		if (isset($this->request->get['sort'])) {
 			$url .= '&sort=' . $this->request->get['sort'];
@@ -352,7 +420,7 @@ class ControllerSaleInvoice extends Controller {
 		}
 
 		$pagination = new Pagination();
-		$pagination->total = $order_total;
+		$pagination->total = $invoice_total;
 		$pagination->page = $page;
 		$pagination->limit = $this->config->get('config_limit_admin');
 		$pagination->url = $this->url->link('sale/invoice', 'token=' . $this->session->data['token'] . $url . '&page={page}', true);
@@ -362,18 +430,20 @@ class ControllerSaleInvoice extends Controller {
 		$data['results'] = sprintf($this->language->get('text_pagination'), ($invoice_total) ? (($page - 1) * $this->config->get('config_limit_admin')) + 1 : 0, ((($page - 1) * $this->config->get('config_limit_admin')) > ($invoice_total - $this->config->get('config_limit_admin'))) ? $invoice_total : ((($page - 1) * $this->config->get('config_limit_admin')) + $this->config->get('config_limit_admin')), $invoice_total, ceil($invoice_total / $this->config->get('config_limit_admin')));
 
 		$data['filter_invoice_id'] = $filter_invoice_id;
+                $data['filter_invoice_number'] = $filter_invoice_number;
 		$data['filter_customer'] = $filter_customer;
 		$data['filter_invoice_status'] = $filter_invoice_status;
 		$data['filter_total'] = $filter_total;
 		$data['filter_date_added'] = $filter_date_added;
-		$data['filter_date_modified'] = $filter_date_modified;
+		$data['filter_date_expire'] = $filter_date_expire;
+                $data['filter_date_payed'] = $filter_date_payed;
 
 		$data['sort'] = $sort;
 		$data['order'] = $order;
 
 		$this->load->model('localisation/order_status');
 
-		$data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
+		$data['invoice_statuses'] = $this->model_sale_invoice->getInvoiceStatuses();
 		
 		$data['header'] = $this->load->controller('common/header');
 		$data['column_left'] = $this->load->controller('common/column_left');
@@ -482,9 +552,13 @@ class ControllerSaleInvoice extends Controller {
 			$url .= '&filter_date_added=' . $this->request->get['filter_date_added'];
 		}
 
-		if (isset($this->request->get['filter_date_modified'])) {
-			$url .= '&filter_date_modified=' . $this->request->get['filter_date_modified'];
+		if (isset($this->request->get['filter_date_expire'])) {
+			$url .= '&filter_date_expire=' . $this->request->get['filter_date_expire'];
 		}
+
+                if (isset($this->request->get['filter_date_payed'])) {
+                        $url .= '&filter_date_payed=' . $this->request->get['filter_date_payed'];
+                }
 
 		if (isset($this->request->get['sort'])) {
 			$url .= '&sort=' . $this->request->get['sort'];
@@ -715,7 +789,7 @@ class ControllerSaleInvoice extends Controller {
 
 		$this->load->model('localisation/order_status');
 
-		$data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
+		$data['invoice_statuses'] = $this->model_sale_invoice->getInvoiceStatuses();
 
 		$this->load->model('localisation/country');
 
@@ -855,9 +929,13 @@ class ControllerSaleInvoice extends Controller {
 				$url .= '&filter_date_added=' . $this->request->get['filter_date_added'];
 			}
 
-			if (isset($this->request->get['filter_date_modified'])) {
-				$url .= '&filter_date_modified=' . $this->request->get['filter_date_modified'];
+			if (isset($this->request->get['filter_date_expire'])) {
+				$url .= '&filter_date_expire=' . $this->request->get['filter_date_expire'];
 			}
+                        
+                        if (isset($this->request->get['filter_date_payed'])) {
+                                $url .= '&filter_date_payed=' . $this->request->get['filter_date_payed'];
+                        }
 
 			if (isset($this->request->get['sort'])) {
 				$url .= '&sort=' . $this->request->get['sort'];
@@ -1106,7 +1184,7 @@ class ControllerSaleInvoice extends Controller {
 				$data['order_status'] = '';
 			}
 
-			$data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
+			$data['invoice_statuses'] = $this->model_sale_invoice->getInvoiceStatuses();
 
 			$data['order_status_id'] = $order_info['order_status_id'];
 

@@ -64,7 +64,7 @@ class ModelSaleInvoice extends Model {
 	}
 
 	public function getInvoices($data = array()) {
-		$sql = "SELECT o.invoice_id, o.invoiceNumber, o.customer_id, o.status_id, o.amount,o.order_id, o.date_added, o.datePayed,o.dateExpire, o.factPeriod FROM `" . DB_PREFIX . "cycling_invoices` o";
+		$sql = "SELECT *, (SELECT CONCAT(c.firstname, ' ', c.lastname) FROM " . DB_PREFIX . "customer c WHERE c.customer_id = o.customer_id) AS customer, o.invoice_id, o.invoiceNumber, o.customer_id, o.status_id, o.amount,o.order_id, o.date_added, o.datePayed,o.dateExpire, o.factPeriod FROM `" . DB_PREFIX . "cycling_invoices` o";
 
 		if (isset($data['filter_invoice_status'])) {
 			$implode = array();
@@ -140,6 +140,51 @@ class ModelSaleInvoice extends Model {
 		return $query->rows;
 	}
 
+
+
+        public function getInvoiceStatuses($data = array()) {
+                if ($data) {
+                        $sql = "SELECT * FROM " . DB_PREFIX . "mdx_cycling_invoices_status WHERE language_id = '" . (int)$this->config->get('config_language_id') . "'";
+
+                        $sql .= " ORDER BY name";
+
+                        if (isset($data['order']) && ($data['order'] == 'DESC')) {
+                                $sql .= " DESC";
+                        } else {
+                                $sql .= " ASC";
+                        }
+
+                        if (isset($data['start']) || isset($data['limit'])) {
+                                if ($data['start'] < 0) {
+                                        $data['start'] = 0;
+                                }
+
+                                if ($data['limit'] < 1) {
+                                        $data['limit'] = 20;
+                                }
+
+                                $sql .= " LIMIT " . (int)$data['start'] . "," . (int)$data['limit'];
+                        }
+
+                        $query = $this->db->query($sql);
+
+                        return $query->rows;
+                } else {
+                        $invoice_status_data = $this->cache->get('invoice_status.' . (int)$this->config->get('config_language_id'));
+
+                        if (!$invoice_status_data) {
+                                $query = $this->db->query("SELECT invoice_status_id, name FROM " . DB_PREFIX . "cycling_invoices_status WHERE language_id = '" . (int)$this->config->get('config_language_id') . "' ORDER BY name");
+
+                                $invoice_status_data = $query->rows;
+
+                                $this->cache->set('invoice_status.' . (int)$this->config->get('config_language_id'), $invoice_status_data);
+                        }
+
+                        return $invoice_status_data;
+                }
+        }
+        
+
 	public function getOrderProducts($order_id) {
 		$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "order_product WHERE order_id = '" . (int)$order_id . "'");
 
@@ -170,27 +215,27 @@ class ModelSaleInvoice extends Model {
 		return $query->rows;
 	}
 
-	public function getTotalOrders($data = array()) {
-		$sql = "SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "order`";
+	public function getTotalInvoices($data = array()) {
+		$sql = "SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "cycling_invoices`";
 
-		if (isset($data['filter_order_status'])) {
+		if (isset($data['filter_invoice_status'])) {
 			$implode = array();
 
-			$order_statuses = explode(',', $data['filter_order_status']);
+			$order_statuses = explode(',', $data['filter_invoice_status']);
 
 			foreach ($order_statuses as $order_status_id) {
-				$implode[] = "order_status_id = '" . (int)$order_status_id . "'";
+				$implode[] = "status_id = '" . (int)$order_status_id . "'";
 			}
 
 			if ($implode) {
 				$sql .= " WHERE (" . implode(" OR ", $implode) . ")";
 			}
 		} else {
-			$sql .= " WHERE order_status_id > '0'";
+			$sql .= " WHERE status_id > '0'";
 		}
 
-		if (!empty($data['filter_order_id'])) {
-			$sql .= " AND order_id = '" . (int)$data['filter_order_id'] . "'";
+		if (!empty($data['filter_invoice_id'])) {
+			$sql .= " AND invoice_id = '" . (int)$data['filter_invoice_id'] . "'";
 		}
 
 		if (!empty($data['filter_customer'])) {
@@ -206,7 +251,7 @@ class ModelSaleInvoice extends Model {
 		}
 
 		if (!empty($data['filter_total'])) {
-			$sql .= " AND total = '" . (float)$data['filter_total'] . "'";
+			$sql .= " AND amount = '" . (float)$data['filter_total'] . "'";
 		}
 
 		$query = $this->db->query($sql);
@@ -214,14 +259,14 @@ class ModelSaleInvoice extends Model {
 		return $query->row['total'];
 	}
 
-	public function getTotalOrdersByStoreId($store_id) {
-		$query = $this->db->query("SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "order` WHERE store_id = '" . (int)$store_id . "'");
+	public function getTotalInvoicesByStoreId($store_id) {
+		$query = $this->db->query("SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "cycling_invoices`");
 
 		return $query->row['total'];
 	}
 
-	public function getTotalOrdersByOrderStatusId($order_status_id) {
-		$query = $this->db->query("SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "order` WHERE order_status_id = '" . (int)$order_status_id . "' AND order_status_id > '0'");
+	public function getTotalOrdersByOrderStatusId($invoice_status_id) {
+		$query = $this->db->query("SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "cycling_invoices` WHERE invoice_status_id = '" . (int)$invoice_status_id . "' AND status_id > '0'");
 
 		return $query->row['total'];
 	}

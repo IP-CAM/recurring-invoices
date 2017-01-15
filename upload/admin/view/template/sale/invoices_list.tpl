@@ -36,8 +36,8 @@
           <div class="row">
             <div class="col-sm-4">
               <div class="form-group">
-                <label class="control-label" for="input-order-id"><?php echo $entry_order_id; ?></label>
-                <input type="text" name="filter_order_id" value="<?php echo $filter_order_id; ?>" placeholder="<?php echo $entry_order_id; ?>" id="input-order-id" class="form-control" />
+                <label class="control-label" for="input-invoice-id"><?php echo $entry_invoice_id; ?></label>
+                <input type="text" name="filter_invoice_id" value="<?php echo $filter_invoice_id; ?>" placeholder="<?php echo $entry_invoice_id; ?>" id="input-invoice-id" class="form-control" />
               </div>
               <div class="form-group">
                 <label class="control-label" for="input-customer"><?php echo $entry_customer; ?></label>
@@ -46,19 +46,14 @@
             </div>
             <div class="col-sm-4">
               <div class="form-group">
-                <label class="control-label" for="input-order-status"><?php echo $entry_order_status; ?></label>
-                <select name="filter_order_status" id="input-order-status" class="form-control">
-                  <option value="*"></option>
-                  <?php if ($filter_order_status == '0') { ?>
-                  <option value="0" selected="selected"><?php echo $text_missing; ?></option>
+                <label class="control-label" for="input-invoice-status"><?php echo $entry_invoice_status; ?></label>
+                <select name="filter_invoice_status" id="input-invoice-status" class="form-control">
+                  <option value="*" selected="selected"></option>
+                  <?php foreach ($invoice_statuses as $invoice_status) { ?>
+                  <?php if ($invoice_status['status_id'] == $filter_invoice_status) { ?>
+                  <option value="<?php echo $invoice_status['status_id']; ?>" selected="selected"><?php echo $invoice_status['name']; ?></option>
                   <?php } else { ?>
-                  <option value="0"><?php echo $text_missing; ?></option>
-                  <?php } ?>
-                  <?php foreach ($order_statuses as $order_status) { ?>
-                  <?php if ($order_status['order_status_id'] == $filter_order_status) { ?>
-                  <option value="<?php echo $order_status['order_status_id']; ?>" selected="selected"><?php echo $order_status['name']; ?></option>
-                  <?php } else { ?>
-                  <option value="<?php echo $order_status['order_status_id']; ?>"><?php echo $order_status['name']; ?></option>
+                  <option value="<?php echo $invoice_status['status_id']; ?>"><?php echo $invoice_status['name']; ?></option>
                   <?php } ?>
                   <?php } ?>
                 </select>
@@ -78,9 +73,9 @@
                   </span></div>
               </div>
               <div class="form-group">
-                <label class="control-label" for="input-date-modified"><?php echo $entry_date_modified; ?></label>
+                <label class="control-label" for="input-date-expire"><?php echo $entry_date_expire; ?></label>
                 <div class="input-group date">
-                  <input type="text" name="filter_date_modified" value="<?php echo $filter_date_modified; ?>" placeholder="<?php echo $entry_date_modified; ?>" data-date-format="YYYY-MM-DD" id="input-date-modified" class="form-control" />
+                  <input type="text" name="filter_date_expire" value="<?php echo $filter_date_expire; ?>" placeholder="<?php echo $entry_date_expire; ?>" data-date-format="YYYY-MM-DD" id="input-date-expire" class="form-control" />
                   <span class="input-group-btn">
                   <button type="button" class="btn btn-default"><i class="fa fa-calendar"></i></button>
                   </span></div>
@@ -89,61 +84,81 @@
             </div>
           </div>
         </div>
-        <form method="post" action="" enctype="multipart/form-data" id="form-order">
+        <form method="post" action="" enctype="multipart/form-data" id="form-invoice">
           <div class="table-responsive">
             <table class="table table-bordered table-hover">
               <thead>
                 <tr>
                   <td style="width: 1px;" class="text-center"><input type="checkbox" onclick="$('input[name*=\'selected\']').prop('checked', this.checked);" /></td>
-                  <td class="text-right"><?php if ($sort == 'o.order_id') { ?>
-                    <a href="<?php echo $sort_order; ?>" class="<?php echo strtolower($order); ?>"><?php echo $column_order_id; ?></a>
+                  <td class="text-right"><?php if ($sort == 'o.invoice_id') { ?>
+                    <a href="<?php echo $sort_order; ?>" class="<?php echo strtolower($invoice); ?>"><?php echo $column_invoice_id; ?></a>
                     <?php } else { ?>
-                    <a href="<?php echo $sort_order; ?>"><?php echo $column_order_id; ?></a>
+                    <a href="<?php echo $sort_order; ?>"><?php echo $column_invoice_id; ?></a>
                     <?php } ?></td>
+
+                  <td class="text-right"><?php if ($sort == 'o.invoice_number') { ?>
+                    <a href="<?php echo $sort_invoice_number; ?>" class="<?php echo strtolower($invoice); ?>"><?php echo $column_invoice_number; ?></a>
+                    <?php } else { ?>
+                    <a href="<?php echo $sort_invoice_number; ?>"><?php echo $column_invoice_number; ?></a>
+                    <?php } ?></td>
+
+
                   <td class="text-left"><?php if ($sort == 'customer') { ?>
-                    <a href="<?php echo $sort_customer; ?>" class="<?php echo strtolower($order); ?>"><?php echo $column_customer; ?></a>
+                    <a href="<?php echo $sort_customer; ?>" class="<?php echo strtolower($invoice); ?>"><?php echo $column_customer; ?></a>
                     <?php } else { ?>
                     <a href="<?php echo $sort_customer; ?>"><?php echo $column_customer; ?></a>
                     <?php } ?></td>
                   <td class="text-left"><?php if ($sort == 'order_status') { ?>
-                    <a href="<?php echo $sort_status; ?>" class="<?php echo strtolower($order); ?>"><?php echo $column_status; ?></a>
+                    <a href="<?php echo $sort_status; ?>" class="<?php echo strtolower($invoice); ?>"><?php echo $column_status; ?></a>
                     <?php } else { ?>
                     <a href="<?php echo $sort_status; ?>"><?php echo $column_status; ?></a>
                     <?php } ?></td>
                   <td class="text-right"><?php if ($sort == 'o.total') { ?>
-                    <a href="<?php echo $sort_total; ?>" class="<?php echo strtolower($order); ?>"><?php echo $column_total; ?></a>
+                    <a href="<?php echo $sort_total; ?>" class="<?php echo strtolower($invoice); ?>"><?php echo $column_total; ?></a>
                     <?php } else { ?>
                     <a href="<?php echo $sort_total; ?>"><?php echo $column_total; ?></a>
                     <?php } ?></td>
                   <td class="text-left"><?php if ($sort == 'o.date_added') { ?>
-                    <a href="<?php echo $sort_date_added; ?>" class="<?php echo strtolower($order); ?>"><?php echo $column_date_added; ?></a>
+                    <a href="<?php echo $sort_date_added; ?>" class="<?php echo strtolower($invoice); ?>"><?php echo $column_date_added; ?></a>
                     <?php } else { ?>
                     <a href="<?php echo $sort_date_added; ?>"><?php echo $column_date_added; ?></a>
                     <?php } ?></td>
-                  <td class="text-left"><?php if ($sort == 'o.date_modified') { ?>
-                    <a href="<?php echo $sort_date_modified; ?>" class="<?php echo strtolower($order); ?>"><?php echo $column_date_modified; ?></a>
+                  <td class="text-left"><?php if ($sort == 'o.date_expire') { ?>
+                    <a href="<?php echo $sort_date_expire; ?>" class="<?php echo strtolower($invoice); ?>"><?php echo $column_date_expire; ?></a>
                     <?php } else { ?>
-                    <a href="<?php echo $sort_date_modified; ?>"><?php echo $column_date_modified; ?></a>
+                    <a href="<?php echo $sort_date_expire; ?>"><?php echo $column_date_expire; ?></a>
                     <?php } ?></td>
+                  <td class="text-left"><?php if ($sort == 'o.date_payed') { ?>
+                    <a href="<?php echo $sort_date_payed; ?>" class="<?php echo strtolower($invoice); ?>"><?php echo $column_date_payed; ?></a>
+                    <?php } else { ?>
+                    <a href="<?php echo $sort_date_payed; ?>"><?php echo $column_date_payed; ?></a>
+                    <?php } ?></td>
+                    
+                  <td class="text-left">
+                    <?php echo $column_fact_period; ?>
+                  </td>
                   <td class="text-right"><?php echo $column_action; ?></td>
                 </tr>
               </thead>
               <tbody>
-                <?php if ($orders) { ?>
-                <?php foreach ($orders as $order) { ?>
+                <?php if ($invoices) { ?>
+                <?php foreach ($invoices as $invoice) { ?>
                 <tr>
-                  <td class="text-center"><?php if (in_array($order['order_id'], $selected)) { ?>
-                    <input type="checkbox" name="selected[]" value="<?php echo $order['order_id']; ?>" checked="checked" />
+                  <td class="text-center"><?php if (in_array($invoice['invoice_id'], $selected)) { ?>
+                    <input type="checkbox" name="selected[]" value="<?php echo $invoice['invoice_id']; ?>" checked="checked" />
                     <?php } else { ?>
-                    <input type="checkbox" name="selected[]" value="<?php echo $order['order_id']; ?>" />
+                    <input type="checkbox" name="selected[]" value="<?php echo $invoice['invoice_id']; ?>" />
                     <?php } ?>
-                    <input type="hidden" name="shipping_code[]" value="<?php echo $order['shipping_code']; ?>" /></td>
-                  <td class="text-right"><?php echo $order['order_id']; ?></td>
-                  <td class="text-left"><?php echo $order['customer']; ?></td>
-                  <td class="text-left"><?php echo $order['order_status']; ?></td>
-                  <td class="text-right"><?php echo $order['total']; ?></td>
-                  <td class="text-left"><?php echo $order['date_added']; ?></td>
-                  <td class="text-left"><?php echo $order['date_modified']; ?></td>
+                    <input type="hidden" name="shipping_code[]" value="<?php echo $invoice['shipping_code']; ?>" /></td>
+                  <td class="text-right"><?php echo $invoice['invoice_id']; ?></td>
+                  <td class="text-right"><?php echo $invoice['invoice_number']; ?></td>
+                  <td class="text-left"><?php echo $invoice['customer']; ?></td>
+                  <td class="text-left"><?php echo $invoice['invoice_status']; ?></td>
+                  <td class="text-right"><?php echo $invoice['total']; ?></td>
+                  <td class="text-left"><?php echo $invoice['date_added']; ?></td>
+                  <td class="text-left"><?php echo $invoice['date_expire']; ?></td>
+                  <td class="text-left"><?php echo $invoice['date_payed']; ?></td>
+                  <td class="text-left"><?php echo $invoice['fact_period']; ?></td>
                   <td class="text-right"><a href="<?php echo $order['view']; ?>" data-toggle="tooltip" title="<?php echo $button_view; ?>" class="btn btn-info"><i class="fa fa-eye"></i></a> <a href="<?php echo $order['edit']; ?>" data-toggle="tooltip" title="<?php echo $button_edit; ?>" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>
                 </tr>
                 <?php } ?>
@@ -167,10 +182,10 @@
 $('#button-filter').on('click', function() {
 	url = 'index.php?route=sale/order&token=<?php echo $token; ?>';
 
-	var filter_order_id = $('input[name=\'filter_order_id\']').val();
+	var filter_nvoice_id = $('input[name=\'filter_invoice_id\']').val();
 
 	if (filter_order_id) {
-		url += '&filter_order_id=' + encodeURIComponent(filter_order_id);
+		url += '&filter_invoice_id=' + encodeURIComponent(filter_invoice_id);
 	}
 
 	var filter_customer = $('input[name=\'filter_customer\']').val();
@@ -179,10 +194,10 @@ $('#button-filter').on('click', function() {
 		url += '&filter_customer=' + encodeURIComponent(filter_customer);
 	}
 
-	var filter_order_status = $('select[name=\'filter_order_status\']').val();
+	var filter_invoice_status = $('select[name=\'filter_invoice_status\']').val();
 
-	if (filter_order_status != '*') {
-		url += '&filter_order_status=' + encodeURIComponent(filter_order_status);
+	if (filter_invoice_status != '*') {
+		url += '&filter_invoice_status=' + encodeURIComponent(filter_invoice_status);
 	}
 
 	var filter_total = $('input[name=\'filter_total\']').val();
@@ -197,10 +212,10 @@ $('#button-filter').on('click', function() {
 		url += '&filter_date_added=' + encodeURIComponent(filter_date_added);
 	}
 
-	var filter_date_modified = $('input[name=\'filter_date_modified\']').val();
+	var filter_date_expire = $('input[name=\'filter_date_expire\']').val();
 
-	if (filter_date_modified) {
-		url += '&filter_date_modified=' + encodeURIComponent(filter_date_modified);
+	if (filter_date_expire) {
+		url += '&filter_date_expire=' + encodeURIComponent(filter_date_expire);
 	}
 
 	location = url;
