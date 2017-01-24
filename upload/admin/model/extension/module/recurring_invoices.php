@@ -7,7 +7,7 @@ class ModelExtensionModuleRecurringInvoices extends Model {
       `ID` int(11) NOT NULL AUTO_INCREMENT,
       `userId` int(11) NOT NULL,
       `vmID` int(11) DEFAULT NULL,
-      `prodID` int(11) NOT NULL,
+      `order_id` int(11) NOT NULL,
       `startingDate` date NOT NULL,
       `expiringDate` date DEFAULT NULL,
       PRIMARY KEY (`ID`),
@@ -18,6 +18,7 @@ class ModelExtensionModuleRecurringInvoices extends Model {
       CREATE TABLE IF NOT EXISTS `" . DB_PREFIX . "vms` (
       `ID` int(11) NOT NULL AUTO_INCREMENT,
       `userid` int(11) NOT NULL,
+      `order_id` int(11) NOT NULL,
       `vmName` varchar(100) NOT NULL,
       `vmIp` varchar(100) DEFAULT NULL,
       `Host` varchar(20) DEFAULT NULL,

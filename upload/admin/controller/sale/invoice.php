@@ -532,16 +532,16 @@ class ControllerSaleInvoice extends Controller {
 
 		$url = '';
 
-		if (isset($this->request->get['filter_order_id'])) {
-			$url .= '&filter_order_id=' . $this->request->get['filter_order_id'];
+		if (isset($this->request->get['filter_invoice_id'])) {
+			$url .= '&filter_invoice_id=' . $this->request->get['filter_invoice_id'];
 		}
 
 		if (isset($this->request->get['filter_customer'])) {
 			$url .= '&filter_customer=' . urlencode(html_entity_decode($this->request->get['filter_customer'], ENT_QUOTES, 'UTF-8'));
 		}
 
-		if (isset($this->request->get['filter_order_status'])) {
-			$url .= '&filter_order_status=' . $this->request->get['filter_order_status'];
+		if (isset($this->request->get['filter_invoice_status'])) {
+			$url .= '&filter_invoice_status=' . $this->request->get['filter_invoice_status'];
 		}
 
 		if (isset($this->request->get['filter_total'])) {
@@ -581,19 +581,35 @@ class ControllerSaleInvoice extends Controller {
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('heading_title'),
-			'href' => $this->url->link('sale/order', 'token=' . $this->session->data['token'] . $url, true)
+			'href' => $this->url->link('sale/invoice', 'token=' . $this->session->data['token'] . $url, true)
 		);
 
-		$data['cancel'] = $this->url->link('sale/order', 'token=' . $this->session->data['token'] . $url, true);
+		$data['cancel'] = $this->url->link('sale/invoice', 'token=' . $this->session->data['token'] . $url, true);
 
 		$data['token'] = $this->session->data['token'];
 
-		if (isset($this->request->get['order_id'])) {
-			$order_info = $this->model_sale_order->getOrder($this->request->get['order_id']);
+		if (isset($this->request->get['invoice_id'])) {
+			$invoice_info = $this->model_sale_invoice->getInvoice($this->request->get['invoice_id']);
 		}
 
-		if (!empty($order_info)) {
-			$data['order_id'] = $this->request->get['order_id'];
+		if (!empty($invoice_info)) {
+                        // Data from invoice table
+			$data['invoice_id'] = $this->request->get['invoice_id'];
+                        $data['invoice_number'] = $invoice_info['invoiceNumber'];
+                        $data['customer_id'] = $invoice_info['customer_id'];
+                        $data['order_id'] = $invoice_info['order_id'];
+                        $data['txnid'] = $invoice_info['txnid'];
+                        $data['status_id'] = $invoice_info['status_id'];
+                        $data['amount'] = $invoice_info['amount'];
+                        $data['date_added'] = $invoice_info['date_added'];
+                        $data['datePayed'] = $invoice_info['datePayed'];
+                        $data['dateExpire'] = $invoice_info['dateExpire'];
+                        $data['factPeriod'] = $invoice_info['factPeriod'];
+
+                        //Data from order table
+                  
+                        $this->load->model('sale/order');      
+                        $order_info = $this->model_sale_order->getOrder($invoice_info['order_id']);
 			$data['store_id'] = $order_info['store_id'];
 			$data['store_url'] = $this->request->server['HTTPS'] ? HTTPS_CATALOG : HTTP_CATALOG;
 
@@ -640,14 +656,14 @@ class ControllerSaleInvoice extends Controller {
 			// Products
 			$data['order_products'] = array();
 
-			$products = $this->model_sale_order->getOrderProducts($this->request->get['order_id']);
+			$products = $this->model_sale_order->getOrderProducts($invoice_info['order_id']);
 
 			foreach ($products as $product) {
 				$data['order_products'][] = array(
 					'product_id' => $product['product_id'],
 					'name'       => $product['name'],
 					'model'      => $product['model'],
-					'option'     => $this->model_sale_order->getOrderOptions($this->request->get['order_id'], $product['order_product_id']),
+					'option'     => $this->model_sale_order->getOrderOptions($invoice_info['order_id'], $product['order_product_id']),
 					'quantity'   => $product['quantity'],
 					'price'      => $product['price'],
 					'total'      => $product['total'],
@@ -656,7 +672,7 @@ class ControllerSaleInvoice extends Controller {
 			}
 
 			// Vouchers
-			$data['order_vouchers'] = $this->model_sale_order->getOrderVouchers($this->request->get['order_id']);
+			$data['order_vouchers'] = $this->model_sale_order->getOrderVouchers($invoice_info['order_id']);
 
 			$data['coupon'] = '';
 			$data['voucher'] = '';
@@ -664,7 +680,7 @@ class ControllerSaleInvoice extends Controller {
 
 			$data['order_totals'] = array();
 
-			$order_totals = $this->model_sale_order->getOrderTotals($this->request->get['order_id']);
+			$order_totals = $this->model_sale_order->getOrderTotals($invoice_info['order_id']);
 
 			foreach ($order_totals as $order_total) {
 				// If coupon, voucher or reward points
@@ -682,8 +698,21 @@ class ControllerSaleInvoice extends Controller {
 			$data['affiliate'] = $order_info['affiliate_firstname'] . ' ' . $order_info['affiliate_lastname'];
 			$data['currency_code'] = $order_info['currency_code'];
 		} else {
-			$data['order_id'] = 0;
-			$data['store_id'] = 0;
+                        //Data from invoice table
+
+                        $data['invoice_id'] = 0;
+                        $data['invoice_number'] ='';
+                        $data['customer_id'] = '';
+                        $data['order_id'] = '';
+                        $data['txnid'] = '';
+                        $data['status_id'] = '';
+                        $data['amount'] = '';
+                        $data['date_added'] = '';
+                        $data['datePayed'] = '';
+                        $data['dateExpire'] = '';
+                        $data['factPeriod'] = '';
+
+                        $data['store_id'] = 0;
 			$data['store_url'] = $this->request->server['HTTPS'] ? HTTPS_CATALOG : HTTP_CATALOG;
 			
 			$data['customer'] = '';
@@ -827,22 +856,24 @@ class ControllerSaleInvoice extends Controller {
 		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['footer'] = $this->load->controller('common/footer');
 
-		$this->response->setOutput($this->load->view('sale/order_form', $data));
+		$this->response->setOutput($this->load->view('sale/invoice_form', $data));
 	}
 
 	public function info() {
-		$this->load->model('sale/order');
-
-		if (isset($this->request->get['order_id'])) {
-			$order_id = $this->request->get['order_id'];
+		$this->load->model('sale/invoice');
+                $this->load->model('sale/order');
+		if (isset($this->request->get['invoice_id'])) {
+			$invoice_id = $this->request->get['invoice_id'];
 		} else {
-			$order_id = 0;
+			$invoice_id = 0;
 		}
-
+                $invoice_info = $this->model_sale_invoice->getInvoice($invoice_id);
+              
+                $order_id=$invoice_info['order_id'];
 		$order_info = $this->model_sale_order->getOrder($order_id);
 
 		if ($order_info) {
-			$this->load->language('sale/order');
+	      		$this->load->language('sale/order');
 
 			$this->document->setTitle($this->language->get('heading_title'));
 
@@ -909,16 +940,16 @@ class ControllerSaleInvoice extends Controller {
 
 			$url = '';
 
-			if (isset($this->request->get['filter_order_id'])) {
-				$url .= '&filter_order_id=' . $this->request->get['filter_order_id'];
+			if (isset($this->request->get['filter_invoice_id'])) {
+				$url .= '&filter_invoice_id=' . $this->request->get['filter_invoice_id'];
 			}
 
 			if (isset($this->request->get['filter_customer'])) {
 				$url .= '&filter_customer=' . urlencode(html_entity_decode($this->request->get['filter_customer'], ENT_QUOTES, 'UTF-8'));
 			}
 
-			if (isset($this->request->get['filter_order_status'])) {
-				$url .= '&filter_order_status=' . $this->request->get['filter_order_status'];
+			if (isset($this->request->get['filter_invoice_status'])) {
+				$url .= '&filter_invoice_status=' . $this->request->get['filter_invoice_status'];
 			}
 
 			if (isset($this->request->get['filter_total'])) {
@@ -963,12 +994,12 @@ class ControllerSaleInvoice extends Controller {
 
 			$data['shipping'] = $this->url->link('sale/order/shipping', 'token=' . $this->session->data['token'] . '&order_id=' . (int)$this->request->get['order_id'], true);
 			$data['invoice'] = $this->url->link('sale/order/invoice', 'token=' . $this->session->data['token'] . '&order_id=' . (int)$this->request->get['order_id'], true);
-			$data['edit'] = $this->url->link('sale/order/edit', 'token=' . $this->session->data['token'] . '&order_id=' . (int)$this->request->get['order_id'], true);
-			$data['cancel'] = $this->url->link('sale/order', 'token=' . $this->session->data['token'] . $url, true);
+			$data['edit'] = $this->url->link('sale/invoice/edit', 'token=' . $this->session->data['token'] . '&order_id=' . (int)$this->request->get['order_id'], true);
+			$data['cancel'] = $this->url->link('sale/invoice', 'token=' . $this->session->data['token'] . $url, true);
 
 			$data['token'] = $this->session->data['token'];
 
-			$data['order_id'] = $this->request->get['order_id'];
+			$data['invoice_id'] = $this->request->get['invoice_id'];
 
 			$data['store_id'] = $order_info['store_id'];
 			$data['store_name'] = $order_info['store_name'];
@@ -979,14 +1010,27 @@ class ControllerSaleInvoice extends Controller {
 				$data['store_url'] = $order_info['store_url'];
 			}
 
-			if ($order_info['invoice_no']) {
+			/*if ($order_info['invoice_no']) {
 				$data['invoice_no'] = $order_info['invoice_prefix'] . $order_info['invoice_no'];
 			} else {
 				$data['invoice_no'] = '';
 			}
-
+                        
 			$data['date_added'] = date($this->language->get('date_format_short'), strtotime($order_info['date_added']));
+                        */
 
+                        $data ['invoiceNumber'] = $invoice_info;
+                        $data ['customer_id'] = $invoice_info['customer_id'];
+                        $data ['txnid'] = $invoice_info['txnid'];
+                        $data ['status_id'] = $invoice_info['status_id'];
+                        $data ['amount'] = $invoice_info['amount'];
+                        $data ['date_added'] = $invoice_info['date_added'];
+                        $data ['datePayed'] = $invoice_info['datePayed'];
+                        $data ['dateExpire'] = $invoice_info['dateExpire'];
+                        $data ['factPeriod'] = $invoice_info['factPeriod'];
+                        $data ['order_id'] = $invoice_info['order_id'];
+                    
+                    
 			$data['firstname'] = $order_info['firstname'];
 			$data['lastname'] = $order_info['lastname'];
 
@@ -1422,14 +1466,14 @@ class ControllerSaleInvoice extends Controller {
 			$data['column_left'] = $this->load->controller('common/column_left');
 			$data['footer'] = $this->load->controller('common/footer');
 
-			$this->response->setOutput($this->load->view('sale/order_info', $data));
+			$this->response->setOutput($this->load->view('sale/invoice_info', $data));
 		} else {
 			return new Action('error/not_found');
 		}
 	}
 	
 	protected function validate() {
-		if (!$this->user->hasPermission('modify', 'sale/order')) {
+		if (!$this->user->hasPermission('modify', 'sale/invoice')) {
 			$this->error['warning'] = $this->language->get('error_permission');
 		}
 
