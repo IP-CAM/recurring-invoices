@@ -7,11 +7,11 @@ class ModelExtensionModuleRecurringInvoices extends Model {
       `ID` int(11) NOT NULL AUTO_INCREMENT,
       `userId` int(11) NOT NULL,
       `vmID` int(11) DEFAULT NULL,
+      `product_id` int(11) DEFAULT NULL,
       `order_id` int(11) NOT NULL,
       `startingDate` date NOT NULL,
       `expiringDate` date DEFAULT NULL,
-      PRIMARY KEY (`ID`),
-      UNIQUE KEY `userId` (`userId`)
+      PRIMARY KEY (`ID`)
       ) DEFAULT CHARSET=utf8");
 
       $this->db->query("
@@ -42,7 +42,8 @@ class ModelExtensionModuleRecurringInvoices extends Model {
       `datePayed` date DEFAULT NULL,
       `dateExpire` date DEFAULT NULL,
       `factPeriod` varchar(30) DEFAULT NULL,
-      PRIMARY KEY (`invoice_id`)
+      PRIMARY KEY (`invoice_id`),
+      UNIQUE KEY `invoiceNumber` (`invoiceNumber`)
 
       ) DEFAULT CHARSET=utf8");
    
@@ -61,6 +62,8 @@ class ModelExtensionModuleRecurringInvoices extends Model {
       $this->db->query("
       INSERT INTO `" . DB_PREFIX . "cycling_invoices_status` (language_id,name) VALUES (1, 'Unpayed');
       INSERT INTO `" . DB_PREFIX . "cycling_invoices_status` (language_id,name) VALUES (1, 'Payed');
+      INSERT INTO `" . DB_PREFIX . "cycling_invoices_status` (language_id,name) VALUES (2, 'Pendiente');
+      INSERT INTO `" . DB_PREFIX . "cycling_invoices_status` (language_id,name) VALUES (2, 'Pagado');
       ");
    
     }  
