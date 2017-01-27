@@ -50,23 +50,24 @@ class ModelExtensionModuleRecurringInvoices extends Model {
 
       $this->db->query("
 
-      CREATE TABLE IF NOT EXISTS `" . DB_PREFIX . "cycling_invoices_status` (
-      `invoice_status_id` int(11) NOT NULL AUTO_INCREMENT,
-      `language_id` int(11) DEFAULT 1,
-      `name` varchar(32) DEFAULT NULL,
-      PRIMARY KEY (`invoice_status_id`)
+        DROP TABLE IF EXISTS `mdx_cycling_invoices_status`;
+        CREATE TABLE `mdx_cycling_invoices_status` (
+          `invoice_status_id` int(11) NOT NULL AUTO_INCREMENT,
+          `language_id` int(11) NOT NULL,
+          `name` varchar(32) NOT NULL,
+          PRIMARY KEY (`invoice_status_id`,`language_id`)
+        ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
-      ) DEFAULT CHARSET=utf8");
-      
+        INSERT INTO `mdx_cycling_invoices_status` (`invoice_status_id`, `language_id`, `name`) VALUES
+        (1, 1, 'Unpayed'),
+        (2, 1, 'Payed'),
+        (1, 2, 'Pendiente'),
+        (2, 2, 'Pagada');
 
-      $this->db->query("
-      INSERT INTO `" . DB_PREFIX . "cycling_invoices_status` (language_id,name) VALUES (1, 'Unpayed');
-      INSERT INTO `" . DB_PREFIX . "cycling_invoices_status` (language_id,name) VALUES (1, 'Payed');
-      INSERT INTO `" . DB_PREFIX . "cycling_invoices_status` (language_id,name) VALUES (2, 'Pendiente');
-      INSERT INTO `" . DB_PREFIX . "cycling_invoices_status` (language_id,name) VALUES (2, 'Pagado');
       ");
    
     }  
+
    public function deleteSchema() {
       $this->db->query("DROP TABLE IF EXISTS `" . DB_PREFIX . "cycling_payments`");
        $this->db->query("DROP TABLE IF EXISTS `" . DB_PREFIX . "vms`");
