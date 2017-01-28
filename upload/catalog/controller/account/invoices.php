@@ -7,8 +7,8 @@ class ControllerAccountInvoices extends Controller {
 			$this->response->redirect($this->url->link('account/login', '', true));
 		}
 
-		$this->load->language('account/order');
-
+		//$this->load->language('account/order');
+                $this->load->language('account/invoices');
 		$this->document->setTitle($this->language->get('heading_title'));
 		
 		$url = '';
@@ -44,7 +44,13 @@ class ControllerAccountInvoices extends Controller {
 		$data['column_total'] = $this->language->get('column_total');
 		$data['column_status'] = $this->language->get('column_status');
 		$data['column_date_added'] = $this->language->get('column_date_added');
-
+                $data['column_date_expire'] = $this->language->get('column_date_expire');
+                $data['column_date_payed'] = $this->language->get('column_date_payed');
+                $data['column_facturation_period'] = $this->language->get('column_facturation_period');
+                $data['column_date_added'] = $this->language->get('column_date_added');
+                $data['column_invoice_number'] = $this->language->get('column_invoice_number');
+                $data['column_facturation_period'] = $this->language->get('column_facturation_period');
+                $data['column_txn'] = $this->language->get('column_txn');
 		$data['button_view'] = $this->language->get('button_view');
 		$data['button_continue'] = $this->language->get('button_continue');
 
@@ -60,25 +66,29 @@ class ControllerAccountInvoices extends Controller {
                 $this->load->model('account/order');
 		$invoices_total = $this->model_account_invoices->getTotalInvoices();
 		$results = $this->model_account_invoices->getInvoices(($page - 1) * 10, 10);
-                $order_id = $result['order_id'];
 
 		foreach ($results as $result) {
 			$product_total = $this->model_account_order->getTotalOrderProductsByOrderId($result['order_id']);
 			$voucher_total = $this->model_account_order->getTotalOrderVouchersByOrderId($result['order_id']);
                         $order_info=$this->model_account_order->getOrder($result['order_id']);
+                  
+                        $fact_period = $result['factPeriod'];
+                        $split_date = explode(" - ",$fact_period);
+                        $date1 = date($this->language->get('date_format_short'), strtotime($split_date[0]));
+                        $date2 = date($this->language->get('date_format_short'), strtotime($split_date[1]));
 
 			$data['invoices'][] = array(
 				'order_id'   => $result['order_id'],
                                 'total_invoices' => $invoices_total,
                                 'invoiceNumber'   => $result['invoiceNumber'],
-                                'factPeriod'   => $result['factPeriod'],
+                                'factPeriod'   => $date1 . ' - ' . $date2,
 				'status'     => $result['status'],
 				'date_added' => date($this->language->get('date_format_short'), strtotime($result['date_added'])),
                                 'datePayed'  => date($this->language->get('date_format_short'), strtotime($result['datePayed'])),   
                                 'dateExpire'  => date($this->language->get('date_format_short'), strtotime($result['dateExpire'])),
 				'products'   => ($product_total + $voucher_total),
 				'amount'      => $this->currency->format($result['amount'], $order_info['currency_code'], $order_info['currency_value']),
-				'view'       => $this->url->link('account/invoice/info', 'invoice_id=' . $result['invoice_id'], true),
+				'view'       => $this->url->link('account/invoices/info', 'invoice_id=' . $result['invoice_id'], true),
 			);
 		}
 
@@ -105,7 +115,7 @@ class ControllerAccountInvoices extends Controller {
 	}
 
 	public function info() {
-		$this->load->language('account/order');
+		$this->load->language('account/invoices');
 
 		if (isset($this->request->get['invoice_id'])) {
 			$invoice_id = $this->request->get['invoice_id'];
@@ -119,13 +129,29 @@ class ControllerAccountInvoices extends Controller {
 			$this->response->redirect($this->url->link('account/login', '', true));
 		}
 
-		$this->load->model('account/invoice');
-
+		$this->load->model('account/invoices');
+                $this->load->model('account/order');
 		$invoice_info = $this->model_account_invoices->getInvoice($invoice_id);
                 $order_id = $invoice_info['order_id'];
+                $order_info = $this->model_account_order->getOrder($order_id);
+                $fact_period = $invoice_info['factPeriod'];
+                $split_date = explode(" - ",$fact_period);
+                $date1 = date($this->language->get('date_format_short'), strtotime($split_date[0]));
+                $date2 = date($this->language->get('date_format_short'), strtotime($split_date[1]));
+                //Invoice Data
+                $data['invoiceNumber'] = $invoice_info['invoiceNumber'];
+                $data['factPeriod'] = $date1 . ' - ' . $date2;
+                $data['date_added'] = date($this->language->get('date_format_short'), strtotime($invoice_info['date_added']));
+                $data['datePayed'] = date($this->language->get('date_format_short'), strtotime($invoice_info['datePayed']));
+                $data['dateExpire'] = date($this->language->get('date_format_short'), strtotime($invoice_info['dateExpire']));
+                $data['amount'] = $this->currency->format($invoice_info['amount'], $order_info['currency_code'], $order_info['currency_value']);
+                $data['status_id'] = $invoice_info['status_id'];
+                $data['order_id'] = $invoice_info['order_id'];
+                $data['txnid'] = $invoice_info['txnid'];
+
 
 		if ($invoice_info) {
-			$this->document->setTitle($this->language->get('text_order'));
+			$this->document->setTitle($this->language->get('text_invoice'));
 
 			$url = '';
 
@@ -151,13 +177,13 @@ class ControllerAccountInvoices extends Controller {
 			);
 
 			$data['breadcrumbs'][] = array(
-				'text' => $this->language->get('text_order'),
+				'text' => $this->language->get('text_invoice'),
 				'href' => $this->url->link('account/invoices/info', 'invoice_id=' . $this->request->get['invoice_id'] . $url, true)
 			);
 
-			$data['heading_title'] = $this->language->get('text_order');
+			$data['heading_title'] = $this->language->get('heading_title');
 
-			$data['text_order_detail'] = $this->language->get('text_order_detail');
+			$data['text_invoice_detail'] = $this->language->get('text_invoice_detail');
 			$data['text_invoice_no'] = $this->language->get('text_invoice_no');
 			$data['text_order_id'] = $this->language->get('text_order_id');
 			$data['text_date_added'] = $this->language->get('text_date_added');
@@ -168,6 +194,8 @@ class ControllerAccountInvoices extends Controller {
 			$data['text_history'] = $this->language->get('text_history');
 			$data['text_comment'] = $this->language->get('text_comment');
 			$data['text_no_results'] = $this->language->get('text_no_results');
+                        $data['text_tax_number'] =  $this->language->get('text_tax_number');
+                        $data['text_facturation_period'] = $this->language->get('text_facturation_period');
 
 			$data['column_name'] = $this->language->get('column_name');
 			$data['column_model'] = $this->language->get('column_model');
@@ -178,10 +206,26 @@ class ControllerAccountInvoices extends Controller {
 			$data['column_date_added'] = $this->language->get('column_date_added');
 			$data['column_status'] = $this->language->get('column_status');
 			$data['column_comment'] = $this->language->get('column_comment');
+                        $data['column_txn'] = $this->language->get('column_txn');
+                        $data['column_date_payed'] = $this->language->get('column_date_payed');
 
 			$data['button_reorder'] = $this->language->get('button_reorder');
 			$data['button_return'] = $this->language->get('button_return');
 			$data['button_continue'] = $this->language->get('button_continue');
+
+
+                        //Store Data
+                        $data['store_name'] = $this->config->get('config_name');
+                        $data['store_owner'] = $this->config->get('config_owner');
+                        $data['store_address'] = $this->config->get('config_address');
+                        $data['store_zip'] = $this->config->get('config_geocode');
+                        $data['store_telephone'] = $this->config->get('config_telephone');
+
+
+                        $server = $this->config->get('config_url');
+                        $data['store_logo'] = $server . 'image/' . $this->config->get('config_logo');
+
+
 
 			if (isset($this->session->data['error'])) {
 				$data['error_warning'] = $this->session->data['error'];
@@ -198,14 +242,13 @@ class ControllerAccountInvoices extends Controller {
 			} else {
 				$data['success'] = '';
 			}
-
+                      
 			if ($order_info['invoice_no']) {
 				$data['invoice_no'] = $order_info['invoice_prefix'] . $order_info['invoice_no'];
 			} else {
 				$data['invoice_no'] = '';
 			}
-                        $order_info = $this->model_account_order->getOrder($order_id);
-			$data['invoice_id'] = $this->request->get['invoice_id'];
+			$data['invoice_id'] = $invoice_info['invoiceNumber'];;
 			$data['date_added'] = date($this->language->get('date_format_short'), strtotime($order_info['date_added']));
 
 			if ($order_info['payment_address_format']) {
@@ -286,12 +329,12 @@ class ControllerAccountInvoices extends Controller {
 			// Products
 			$data['products'] = array();
 
-			$products = $this->model_account_order->getOrderProducts($this->request->get['order_id']);
+			$products = $this->model_account_order->getOrderProducts($order_id);
 
 			foreach ($products as $product) {
 				$option_data = array();
 
-				$options = $this->model_account_order->getOrderOptions($this->request->get['order_id'], $product['order_product_id']);
+				$options = $this->model_account_order->getOrderOptions($order_id, $product['order_product_id']);
 
 				foreach ($options as $option) {
 					if ($option['type'] != 'file') {
@@ -315,9 +358,12 @@ class ControllerAccountInvoices extends Controller {
 				$product_info = $this->model_catalog_product->getProduct($product['product_id']);
 
 				if ($product_info) {
+/*
 					$reorder = $this->url->link('account/order/reorder', 'order_id=' . $order_id . '&order_product_id=' . $product['order_product_id'], true);
 				} else {
 					$reorder = '';
+*/
+                                $data['attribute_groups'] = $this->model_catalog_product->getProductAttributes($product['product_id']);
 				}
 
 				$data['products'][] = array(
@@ -327,7 +373,7 @@ class ControllerAccountInvoices extends Controller {
 					'quantity' => $product['quantity'],
 					'price'    => $this->currency->format($product['price'] + ($this->config->get('config_tax') ? $product['tax'] : 0), $order_info['currency_code'], $order_info['currency_value']),
 					'total'    => $this->currency->format($product['total'] + ($this->config->get('config_tax') ? ($product['tax'] * $product['quantity']) : 0), $order_info['currency_code'], $order_info['currency_value']),
-					'reorder'  => $reorder,
+					//'reorder'  => $reorder,
 					'return'   => $this->url->link('account/return/add', 'order_id=' . $order_info['order_id'] . '&product_id=' . $product['product_id'], true)
 				);
 			}
@@ -335,7 +381,7 @@ class ControllerAccountInvoices extends Controller {
 			// Voucher
 			$data['vouchers'] = array();
 
-			$vouchers = $this->model_account_order->getOrderVouchers($this->request->get['order_id']);
+			$vouchers = $this->model_account_order->getOrderVouchers($order_id);
 
 			foreach ($vouchers as $voucher) {
 				$data['vouchers'][] = array(
@@ -347,7 +393,7 @@ class ControllerAccountInvoices extends Controller {
 			// Totals
 			$data['totals'] = array();
 
-			$totals = $this->model_account_order->getOrderTotals($this->request->get['order_id']);
+			$totals = $this->model_account_order->getOrderTotals($order_id);
 
 			foreach ($totals as $total) {
 				$data['totals'][] = array(
@@ -361,7 +407,7 @@ class ControllerAccountInvoices extends Controller {
 			// History
 			$data['histories'] = array();
 
-			$results = $this->model_account_order->getOrderHistories($this->request->get['order_id']);
+			$results = $this->model_account_order->getOrderHistories($order_id);
 
 			foreach ($results as $result) {
 				$data['histories'][] = array(
@@ -371,7 +417,7 @@ class ControllerAccountInvoices extends Controller {
 				);
 			}
 
-			$data['continue'] = $this->url->link('account/order', '', true);
+			$data['continue'] = $this->url->link('account/invoices', '', true);
 
 			$data['column_left'] = $this->load->controller('common/column_left');
 			$data['column_right'] = $this->load->controller('common/column_right');
@@ -380,7 +426,7 @@ class ControllerAccountInvoices extends Controller {
 			$data['footer'] = $this->load->controller('common/footer');
 			$data['header'] = $this->load->controller('common/header');
 
-			$this->response->setOutput($this->load->view('account/invoice_info', $data));
+			$this->response->setOutput($this->load->view('account/invoices_info', $data));
 		} else {
 			$this->document->setTitle($this->language->get('text_order'));
 
@@ -404,15 +450,15 @@ class ControllerAccountInvoices extends Controller {
 
 			$data['breadcrumbs'][] = array(
 				'text' => $this->language->get('heading_title'),
-				'href' => $this->url->link('account/order', '', true)
+				'href' => $this->url->link('account/invoices', '', true)
 			);
 
 			$data['breadcrumbs'][] = array(
 				'text' => $this->language->get('text_order'),
-				'href' => $this->url->link('account/order/info', 'order_id=' . $order_id, true)
+				'href' => $this->url->link('account/invoices/info', 'order_id=' . $order_id, true)
 			);
 
-			$data['continue'] = $this->url->link('account/order', '', true);
+			$data['continue'] = $this->url->link('account/invoices', '', true);
 
 			$data['column_left'] = $this->load->controller('common/column_left');
 			$data['column_right'] = $this->load->controller('common/column_right');
@@ -425,66 +471,4 @@ class ControllerAccountInvoices extends Controller {
 		}
 	}
 
-	public function reorder() {
-		$this->load->language('account/order');
-
-		if (isset($this->request->get['invoice_id'])) {
-			$invoice = $this->request->get['invoice_id'];
-		} else {
-			$invoice_id = 0;
-		}
-
-		$this->load->model('account/invoice');
-                $this->load->model('account/order');
-		$invoice_info = $this->model_account_invoices->getInvoice($invoice_id);
-                $order_id = $invoice_info ['order_id'];
-                $order_info = $this->model_account_order->getOrder($order_id);
-
-		if ($invoice_info) {
-			if (isset($this->request->get['order_product_id'])) {
-				$order_product_id = $this->request->get['order_product_id'];
-			} else {
-				$order_product_id = 0;
-			}
-
-			$order_product_info = $this->model_account_order->getOrderProduct($order_id, $order_product_id);
-
-			if ($order_product_info) {
-				$this->load->model('catalog/product');
-
-				$product_info = $this->model_catalog_product->getProduct($order_product_info['product_id']);
-
-				if ($product_info) {
-					$option_data = array();
-
-					$order_options = $this->model_account_order->getOrderOptions($order_product_info['order_id'], $order_product_id);
-
-					foreach ($order_options as $order_option) {
-						if ($order_option['type'] == 'select' || $order_option['type'] == 'radio' || $order_option['type'] == 'image') {
-							$option_data[$order_option['product_option_id']] = $order_option['product_option_value_id'];
-						} elseif ($order_option['type'] == 'checkbox') {
-							$option_data[$order_option['product_option_id']][] = $order_option['product_option_value_id'];
-						} elseif ($order_option['type'] == 'text' || $order_option['type'] == 'textarea' || $order_option['type'] == 'date' || $order_option['type'] == 'datetime' || $order_option['type'] == 'time') {
-							$option_data[$order_option['product_option_id']] = $order_option['value'];
-						} elseif ($order_option['type'] == 'file') {
-							$option_data[$order_option['product_option_id']] = $this->encryption->encrypt($order_option['value']);
-						}
-					}
-
-					$this->cart->add($order_product_info['product_id'], $order_product_info['quantity'], $option_data);
-
-					$this->session->data['success'] = sprintf($this->language->get('text_success'), $this->url->link('product/product', 'product_id=' . $product_info['product_id']), $product_info['name'], $this->url->link('checkout/cart'));
-
-					unset($this->session->data['shipping_method']);
-					unset($this->session->data['shipping_methods']);
-					unset($this->session->data['payment_method']);
-					unset($this->session->data['payment_methods']);
-				} else {
-					$this->session->data['error'] = sprintf($this->language->get('error_reorder'), $order_product_info['name']);
-				}
-			}
-		}
-
-		$this->response->redirect($this->url->link('account/invoice/info', 'invoice_id=' . $order_id));
-	}
 }
