@@ -4,9 +4,9 @@
     <div class="container-fluid">
       <div class="pull-right">
         <button type="submit" id="button-shipping" form="form-invoice" formaction="<?php echo $shipping; ?>" formtarget="_blank" data-toggle="tooltip" title="<?php echo $button_shipping_print; ?>" class="btn btn-info"><i class="fa fa-truck"></i></button>
-        <button type="submit" id="button-invoice" form="form-order" formaction="<?php echo $invoice; ?>" formtarget="_blank" data-toggle="tooltip" title="<?php echo $button_invoice_print; ?>" class="btn btn-info"><i class="fa fa-print"></i></button>
+        <button type="submit" id="button-invoice" form="form-invoice" formaction="<?php echo $invoice; ?>" formtarget="_blank" data-toggle="tooltip" title="<?php echo $button_invoice_print; ?>" class="btn btn-info"><i class="fa fa-print"></i></button>
         <a href="<?php echo $add; ?>" data-toggle="tooltip" title="<?php echo $button_add; ?>" class="btn btn-primary"><i class="fa fa-plus"></i></a>
-        <button type="button" id="button-delete" form="form-order" formaction="<?php echo $delete; ?>" data-toggle="tooltip" title="<?php echo $button_delete; ?>" class="btn btn-danger"><i class="fa fa-trash-o"></i></button>
+        <button type="button" id="button-delete" form="form-invoice" formaction="<?php echo $delete; ?>" data-toggle="tooltip" title="<?php echo $button_delete; ?>" class="btn btn-danger"><i class="fa fa-trash-o"></i></button>
       </div>
       <h1><?php echo $heading_title; ?></h1>
       <ul class="breadcrumb">
@@ -42,19 +42,16 @@
               <div class="form-group">
                 <label class="control-label" for="input-customer"><?php echo $entry_customer; ?></label>
                 <input type="text" name="filter_customer" value="<?php echo $filter_customer; ?>" placeholder="<?php echo $entry_customer; ?>" id="input-customer" class="form-control" />
+              
               </div>
             </div>
             <div class="col-sm-4">
               <div class="form-group">
                 <label class="control-label" for="input-invoice-status"><?php echo $entry_invoice_status; ?></label>
                 <select name="filter_invoice_status" id="input-invoice-status" class="form-control">
-                  <option value="*" selected="selected"></option>
+                  <option value="*" selected="selected">All</option>
                   <?php foreach ($invoice_statuses as $invoice_status) { ?>
-                  <?php if ($invoice_status['status_id'] == $filter_invoice_status) { ?>
-                  <option value="<?php echo $invoice_status['status_id']; ?>" selected="selected"><?php echo $invoice_status['name']; ?></option>
-                  <?php } else { ?>
-                  <option value="<?php echo $invoice_status['status_id']; ?>"><?php echo $invoice_status['name']; ?></option>
-                  <?php } ?>
+                  <option value="<?php echo $invoice_status['invoice_status_id']; ?>"><?php echo $invoice_status['name']; ?></option>
                   <?php } ?>
                 </select>
               </div>
@@ -108,7 +105,7 @@
                     <?php } else { ?>
                     <a href="<?php echo $sort_customer; ?>"><?php echo $column_customer; ?></a>
                     <?php } ?></td>
-                  <td class="text-left"><?php if ($sort == 'order_status') { ?>
+                  <td class="text-left"><?php if ($sort == 'invoice_status') { ?>
                     <a href="<?php echo $sort_status; ?>" class="<?php echo strtolower($invoice); ?>"><?php echo $column_status; ?></a>
                     <?php } else { ?>
                     <a href="<?php echo $sort_status; ?>"><?php echo $column_status; ?></a>
@@ -159,7 +156,7 @@
                   <td class="text-left"><?php echo $invoice['date_expire']; ?></td>
                   <td class="text-left"><?php echo $invoice['date_payed']; ?></td>
                   <td class="text-left"><?php echo $invoice['fact_period']; ?></td>
-                  <td class="text-right"><a href="<?php echo $order['view']; ?>" data-toggle="tooltip" title="<?php echo $button_view; ?>" class="btn btn-info"><i class="fa fa-eye"></i></a> <a href="<?php echo $order['edit']; ?>" data-toggle="tooltip" title="<?php echo $button_edit; ?>" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>
+                  <td class="text-right"><a href="<?php echo $invoice['view']; ?>" data-toggle="tooltip" title="<?php echo $button_view; ?>" class="btn btn-info"><i class="fa fa-eye"></i></a> <a href="<?php echo $invoice['edit']; ?>" data-toggle="tooltip" title="<?php echo $button_edit; ?>" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>
                 </tr>
                 <?php } ?>
                 <?php } else { ?>
@@ -180,18 +177,22 @@
   </div>
   <script type="text/javascript"><!--
 $('#button-filter').on('click', function() {
-	url = 'index.php?route=sale/order&token=<?php echo $token; ?>';
+	url = 'index.php?route=sale/invoice&token=<?php echo $token; ?>';
 
-	var filter_nvoice_id = $('input[name=\'filter_invoice_id\']').val();
+	var filter_invoice_id = $('input[name=\'filter_invoice_id\']').val();
 
-	if (filter_order_id) {
+	if (filter_invoice_id) {
 		url += '&filter_invoice_id=' + encodeURIComponent(filter_invoice_id);
 	}
 
 	var filter_customer = $('input[name=\'filter_customer\']').val();
+        //console.log('Filter customer ' + filter_customer);
+
+
+        var filter_customer_id = $('a:contains("' +filter_customer + '")').parent().data('value');
 
 	if (filter_customer) {
-		url += '&filter_customer=' + encodeURIComponent(filter_customer);
+		url += '&filter_customer=' + encodeURIComponent(filter_customer) + '&filter_customer_id=' + encodeURIComponent(filter_customer_id);
 	}
 
 	var filter_invoice_status = $('select[name=\'filter_invoice_status\']').val();
@@ -267,14 +268,14 @@ $('input[name^=\'selected\']:first').trigger('change');
 
 // IE and Edge fix!
 $('#button-shipping, #button-invoice').on('click', function(e) {
-	$('#form-order').attr('action', this.getAttribute('formAction'));
+	$('#form-invoice').attr('action', this.getAttribute('formAction'));
 });
 
 $('#button-delete').on('click', function(e) {
-	$('#form-order').attr('action', this.getAttribute('formAction'));
+	$('#form-invoice').attr('action', this.getAttribute('formAction'));
 	
 	if (confirm('<?php echo $text_confirm; ?>')) {
-		$('#form-order').submit();
+		$('#form-invoice').submit();
 	} else {
 		return false;
 	}

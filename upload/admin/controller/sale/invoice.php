@@ -59,6 +59,10 @@ class ControllerSaleInvoice extends Controller {
 			if (isset($this->request->get['filter_customer'])) {
 				$url .= '&filter_customer=' . urlencode(html_entity_decode($this->request->get['filter_customer'], ENT_QUOTES, 'UTF-8'));
 			}
+
+                        if (isset($this->request->get['filter_customer_id'])) {
+                                $url .= '&filter_customer_id=' . urlencode(html_entity_decode($this->request->get['filter_customer_id'], ENT_QUOTES, 'UTF-8'));
+                        }
 	
 			if (isset($this->request->get['filter_invoice_status'])) {
 				$url .= '&filter_invoice_status=' . $this->request->get['filter_invoice_status'];
@@ -106,6 +110,12 @@ class ControllerSaleInvoice extends Controller {
 		} else {
 			$filter_customer = null;
 		}
+                if (isset($this->request->get['filter_customer_id'])) {
+                      $filter_customer_id = $this->request->get['filter_customer_id'];
+                } else {
+                      $filter_customer_id = null;
+                }
+
 
 		if (isset($this->request->get['filter_invoice_status'])) {
 			$filter_invoice_status = $this->request->get['filter_invoice_status'];
@@ -171,6 +181,11 @@ class ControllerSaleInvoice extends Controller {
 			$url .= '&filter_customer=' . urlencode(html_entity_decode($this->request->get['filter_customer'], ENT_QUOTES, 'UTF-8'));
 		}
 
+                if (isset($this->request->get['filter_customer_id'])) {
+                        $url .= '&filter_customer_id=' . urlencode(html_entity_decode($this->request->get['filter_customer_id'], ENT_QUOTES, 'UTF-8'));
+                }
+
+
 		if (isset($this->request->get['filter_invoice_status'])) {
 			$url .= '&filter_invoice_status=' . $this->request->get['filter_invoice_status'];
 		}
@@ -227,6 +242,7 @@ class ControllerSaleInvoice extends Controller {
 			'filter_invoice_id'      => $filter_invoice_id,
                         'filter_invoice_number'      => $filter_invoice_number,
 			'filter_customer'	   => $filter_customer,
+                        'filter_customer_id'          => $filter_customer_id,
 			'filter_invoice_status'  => $filter_invoice_status,
 			'filter_total'         => $filter_total,
 			'filter_date_added'    => $filter_date_added,
@@ -336,6 +352,11 @@ class ControllerSaleInvoice extends Controller {
 		if (isset($this->request->get['filter_customer'])) {
 			$url .= '&filter_customer=' . urlencode(html_entity_decode($this->request->get['filter_customer'], ENT_QUOTES, 'UTF-8'));
 		}
+                if (isset($this->request->get['filter_customer_id'])) {
+                        $url .= '&filter_customer_id=' . urlencode(html_entity_decode($this->request->get['filter_customer_id'], ENT_QUOTES, 'UTF-8'));
+                }
+
+
 
 		if (isset($this->request->get['filter_invoice_status'])) {
 			$url .= '&filter_invoice_status=' . $this->request->get['filter_invoice_status'];
@@ -390,8 +411,11 @@ class ControllerSaleInvoice extends Controller {
 		if (isset($this->request->get['filter_customer'])) {
 			$url .= '&filter_customer=' . urlencode(html_entity_decode($this->request->get['filter_customer'], ENT_QUOTES, 'UTF-8'));
 		}
+                if (isset($this->request->get['filter_customer_id'])) {
+                        $url .= '&filter_customer_id=' . urlencode(html_entity_decode($this->request->get['filter_customer_id'], ENT_QUOTES, 'UTF-8'));
+                }
 
-		if (isset($this->request->get['filter_order_status'])) {
+		if (isset($this->request->get['filter_invoice_status'])) {
 			$url .= '&filter_invoice_status=' . $this->request->get['filter_invoice_status'];
 		}
 
@@ -431,6 +455,7 @@ class ControllerSaleInvoice extends Controller {
 
 		$data['filter_invoice_id'] = $filter_invoice_id;
                 $data['filter_invoice_number'] = $filter_invoice_number;
+                $data['filter_customer_id'] = $filter_customer_id;
 		$data['filter_customer'] = $filter_customer;
 		$data['filter_invoice_status'] = $filter_invoice_status;
 		$data['filter_total'] = $filter_total;
@@ -539,6 +564,9 @@ class ControllerSaleInvoice extends Controller {
 		if (isset($this->request->get['filter_customer'])) {
 			$url .= '&filter_customer=' . urlencode(html_entity_decode($this->request->get['filter_customer'], ENT_QUOTES, 'UTF-8'));
 		}
+                if (isset($this->request->get['filter_customer_id'])) {
+                        $url .= '&filter_customer_id=' . urlencode(html_entity_decode($this->request->get['filter_customer_id'], ENT_QUOTES, 'UTF-8'));
+                }
 
 		if (isset($this->request->get['filter_invoice_status'])) {
 			$url .= '&filter_invoice_status=' . $this->request->get['filter_invoice_status'];
@@ -947,6 +975,10 @@ class ControllerSaleInvoice extends Controller {
 			if (isset($this->request->get['filter_customer'])) {
 				$url .= '&filter_customer=' . urlencode(html_entity_decode($this->request->get['filter_customer'], ENT_QUOTES, 'UTF-8'));
 			}
+                        if (isset($this->request->get['filter_customer_id'])) {
+                                $url .= '&filter_customer_id=' . urlencode(html_entity_decode($this->request->get['filter_customer_id'], ENT_QUOTES, 'UTF-8'));
+                        }
+
 
 			if (isset($this->request->get['filter_invoice_status'])) {
 				$url .= '&filter_invoice_status=' . $this->request->get['filter_invoice_status'];
@@ -1022,7 +1054,7 @@ class ControllerSaleInvoice extends Controller {
                         $data ['invoiceNumber'] = $invoice_info;
                         $data ['customer_id'] = $invoice_info['customer_id'];
                         $data ['txnid'] = $invoice_info['txnid'];
-                        $data ['status_id'] = $invoice_info['status_id'];
+                        $data ['invoice_status_id'] = $invoice_info['status_id'];
                         $data ['amount'] = $invoice_info['amount'];
                         $data ['date_added'] = $invoice_info['date_added'];
                         $data ['datePayed'] = $invoice_info['datePayed'];
@@ -1230,7 +1262,7 @@ class ControllerSaleInvoice extends Controller {
 
 			$data['invoice_statuses'] = $this->model_sale_invoice->getInvoiceStatuses();
 
-			$data['order_status_id'] = $order_info['order_status_id'];
+			$data['nvoice_status_id'] = $order_info['status_id'];
 
 			$data['account_custom_field'] = $order_info['custom_field'];
 

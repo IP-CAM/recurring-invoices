@@ -86,8 +86,8 @@ class ModelSaleInvoice extends Model {
 			$sql .= " AND o.invoice_id = '" . (int)$data['filter_invoice_id'] . "'";
 		}
 
-		if (!empty($data['filter_customer'])) {
-			$sql .= " AND CONCAT(o.firstname, ' ', o.lastname) LIKE '%" . $this->db->escape($data['filter_customer']) . "%'";
+		if (!empty($data['filter_customer_id'])) {
+			$sql .= " AND o.customer_id = '" . (int)$data['filter_customer_id'] . "'";
 		}
 
 		if (!empty($data['filter_date_added'])) {
@@ -238,8 +238,8 @@ class ModelSaleInvoice extends Model {
 			$sql .= " AND invoice_id = '" . (int)$data['filter_invoice_id'] . "'";
 		}
 
-		if (!empty($data['filter_customer'])) {
-			$sql .= " AND CONCAT(firstname, ' ', lastname) LIKE '%" . $this->db->escape($data['filter_customer']) . "%'";
+		if (!empty($data['filter_customer_id'])) {
+			$sql .= " AND customer_id = '" . (int)$data['filter_customer_id'] . "'";
 		}
 
 		if (!empty($data['filter_date_added'])) {
@@ -288,7 +288,7 @@ class ModelSaleInvoice extends Model {
 			return 0;
 		}
 	}
-
+/*
 	public function getTotalOrdersByCompleteStatus() {
 		$implode = array();
 
@@ -308,7 +308,7 @@ class ModelSaleInvoice extends Model {
 	}
 
 	public function getTotalOrdersByLanguageId($language_id) {
-		$query = $this->db->query("SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "order` WHERE language_id = '" . (int)$language_id . "' AND order_status_id > '0'");
+              $query = $this->db->query("SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "order` WHERE language_id = '" . (int)$language_id . "' AND order_status_id > '0'");
 
 		return $query->row['total'];
 	}
@@ -385,5 +385,6 @@ class ModelSaleInvoice extends Model {
 		$query = $this->db->query("SELECT DISTINCT email FROM `" . DB_PREFIX . "order` o LEFT JOIN " . DB_PREFIX . "order_product op ON (o.order_id = op.order_id) WHERE (" . implode(" OR ", $implode) . ") AND o.order_status_id <> '0'");
 
 		return $query->row['email'];
-	}
+        }
+ */
 }
