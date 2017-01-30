@@ -8,6 +8,7 @@ class ModelExtensionModuleRecurringInvoices extends Model {
       `userId` int(11) NOT NULL,
       `vmID` int(11) DEFAULT NULL,
       `product_id` int(11) DEFAULT NULL,
+      `order_product_id` int(11) DEFAULT NULL,
       `order_id` int(11) NOT NULL,
       `startingDate` date NOT NULL,
       `expiringDate` date DEFAULT NULL,
@@ -32,6 +33,7 @@ class ModelExtensionModuleRecurringInvoices extends Model {
 
       CREATE TABLE IF NOT EXISTS `" . DB_PREFIX . "cycling_invoices` (
       `invoice_id` int(11) NOT NULL AUTO_INCREMENT,
+      `cycling_id` int(11) DEFAULT 0,
       `invoiceNumber` varchar(20) DEFAULT NULL,
       `customer_id` varchar(100) NOT NULL,
       `txnid` varchar(100) DEFAULT NULL,

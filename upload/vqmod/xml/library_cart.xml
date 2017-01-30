@@ -167,6 +167,7 @@
 
                     foreach ($products as $product){
                       $product_id = $product['product_id'];
+                      $order_product_id = $product['order_product_id'];
               //$orderproducts_arr=$this->db->query("SELECT DISTINCT product_id  FROM `" . DB_PREFIX . "order_product`  WHERE order_id = '" .$order_id . "'");
               //$orderproducts=$orderproducts_arr->row;
     
@@ -174,8 +175,9 @@
                     $new_vmid=$this->model_checkout_invoices->addVm($data,$product_id);
 
                 //Add cycling payment. Add one for each vm that has been created as cycling paymente can be different
-                    $this->model_checkout_invoices->addCyclingPayment($data, $new_vmid,$product_id);
-                    $months = $this->model_checkout_invoices->getMonthsPayed($order_id);
+                    $cycling_id = $this->model_checkout_invoices->addCyclingPayment($data, $new_vmid,$product_id,$order_product_id);
+                    $data['cycling_id'] = $cycling_id;
+                    $months = $this->model_checkout_invoices->getMonthsPayed($order_id, $order_product_id);
                     $countmonths= date ("Y-m-d", strtotime(" +" .$months . " months"));
                     $data ['Factperiod'] =$data ['date_added'] . " - " .  $countmonths;
 
@@ -278,52 +280,53 @@
            ]]></search>
            <add><![CDATA[
               $this->model_checkout_order->addOrderHistory($order_id, $order_status_id, $this->request->post['comment']);
-                                        /*
-                                         * maddish
-                                         * check chsnges in order status:
-                                         * From 0 to pending:  do nothing ...It could be a bank transfer
-                                         * From pendig to Processing: means that a payment has been done.
-                                         * Do the followin:
-                                         *
-                                         * - Crete Virtual Machine instance
-                                         * - Create Cycling payment (customer plan)
-                                         * - Create invoice with cron=no for this order
-                                         *  
-                                         */
-                                        //$current_order_status=
-                                        // Set the order history
-                                        if (isset($this->request->post['order_status_id'])) {
-                                                $order_status_id = $this->request->post['order_status_id'];
-                                        } else {
-                                                $order_status_id = $this->config->get('config_order_status_id');
-                                        }
-                                        #####changes starts here
-                                        $previous_order_status = $order_info['order_status_id'];
-                                        $order_data['order_id'] = $order_id;
-                                        if ($order_status_id == 2  && $previous_order_status == 1) {
-                                          //new status is processing and old status was pending  
-                                            $this->load->model('account/order');
-                                            $this->load->model('checkout/invoices');
-                                            $products = $this->model_account_order->getOrderProducts($order_id);
-                                            $invoice_data=array();
-                                            $order_data['txnid'] = '';
-                                            $order_data['status_id']=2;
-                                            foreach ($order_data['products'] as $product){
-                                                  $product_id = $product['product_id'];
-                                                  //Create VM instance
-                                                  $new_vmid=$this->model_checkout_invoices->addVm($order_data,$product_id);
-                                                  $this->model_checkout_invoices->addCyclingPayment($order_data, $new_vmid,$product_id);
-                                                  //Change this function with the values get from previuos foreach
-                                                  $months = $this->model_checkout_invoices->getMonthsPayed($order_id);
-                                                  $order_data['date_payed'] = $order_data['date_added'] = $order_data['date_expire']= date ("Y-m-d");
-                                                  $countmonths= date ("Y-m-d", strtotime(" +" .$months . " months"));
-                                                  $order_data ['Factperiod'] =$order_data ['date_payed'] . " - " .  $countmonths;
+                  /*
+                   * maddish
+                   * check chsnges in order status:
+                   * From 0 to pending:  do nothing ...It could be a bank transfer
+                   * From pendig to Processing: means that a payment has been done.
+                   * Do the followin:
+                   *
+                   * - Crete Virtual Machine instance
+                   * - Create Cycling payment (customer plan)
+                   * - Create invoice with cron=no for this order
+                   *  
+                   */
+                  //$current_order_status=
+                  // Set the order history
+                  if (isset($this->request->post['order_status_id'])) {
+                          $order_status_id = $this->request->post['order_status_id'];
+                  } else {
+                          $order_status_id = $this->config->get('config_order_status_id');
+                  }
+                  #####changes starts here
+                  $previous_order_status = $order_info['order_status_id'];
+                  $order_data['order_id'] = $order_id;
+                  if ($order_status_id == 2  && $previous_order_status == 1) {
+                    //new status is processing and old status was pending  
+                      $this->load->model('account/order');
+                      $this->load->model('checkout/invoices');
+                      $products = $this->model_account_order->getOrderProducts($order_id);
+                      $invoice_data=array();
+                      $order_data['txnid'] = '';
+                      $order_data['status_id']=2;
+                      foreach ($order_data['products'] as $product){
+                            $product_id = $product['product_id'];
+                            $order_product_id = $product['order_product_id'];
+                            //Create VM instance
+                            $new_vmid=$this->model_checkout_invoices->addVm($order_data,$product_id);
+                            $order_data['cycling_id'] = $this->model_checkout_invoices->addCyclingPayment($order_data, $new_vmid,$product_id,$order_product_id);
+                            //Change this function with the values get from previuos foreach
+                            $months = $this->model_checkout_invoices->getMonthsPayed($order_id, $order_product_id);
+                            $order_data['date_payed'] = $order_data['date_added'] = $order_data['date_expire']= date ("Y-m-d");
+                            $countmonths= date ("Y-m-d", strtotime(" +" .$months . " months"));
+                            $order_data ['Factperiod'] =$order_data ['date_payed'] . " - " .  $countmonths;
 
-                                                  $this->model_checkout_invoices->addInvoice($order_data,$product_id, $iscron='no');
+                            $this->model_checkout_invoices->addInvoice($order_data,$product_id, $iscron='no');
 
-                                            }
+                      }
 
-                                        }
+                  }
 
            ]]></add>
        </operation>

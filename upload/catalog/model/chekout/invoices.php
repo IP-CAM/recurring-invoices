@@ -12,9 +12,9 @@ class ModelCheckoutInvoices extends Model {
                     return $vm_id;
         }
 
-        public function addCyclingPayment($data, $vm_id,$product_id) {
+        public function addCyclingPayment($data, $vm_id,$product_id,$order_product_id) {
                     //need to get months for selected cycling payment
-                    $months=$this->getMonthsPayed((int)$data['order_id'],$product_id); 
+                    $months=$this->getMonthsPayed((int)$data['order_id'],$order_product_id); 
                     $this->db->query("INSERT INTO `" . DB_PREFIX . "cycling_payments` SET userID = '" . $this->db->escape($data['customer_id']) . "', vmID = '" . (int)$vm_id . "', product_id = '" . (int)$product_id . "', order_id = '" . (int)$data['order_id'] . "', startingDate = CURDATE(), expiringDate = DATE(now() + INTERVAL  " . (int)$months . " MONTH);");
 
                     $cycling_id = $this->db->getLastId();
@@ -39,14 +39,10 @@ class ModelCheckoutInvoices extends Model {
       }       
  
 	public function addInvoice($data,$product_id,$iscron='no') {
-                if ($iscron=='yes'){
-                    $data ['date_payed'] ='';
-                    $data ['date_expire'] ='';
-                    $data ['Factperiod'] ='';
-                }
 
+                $cycling_id = (isset($data ['cycling_id']))? $data ['cycling_id']:'0';
                 $netxinvno=$this->getnextInvNumber();                  
-		$this->db->query("INSERT INTO `" . DB_PREFIX . "cycling_invoices` SET invoiceNumber = '" . $netxinvno  . "',  customer_id = '" . (int)$data['customer_id'] . "', txnid = '" . $this->db->escape($data['txnid']) . "', status_id = '" . (int)$data['status_id'] . "', amount = '" . $this->db->escape($data['total']) . "',order_id = '" . (int)$data['order_id'] . "', date_added = '" . $data ['date_added'] . "', datePayed = '" . $data ['date_payed'] . "', dateExpire = '". $data ['date_expire'] . "', factPeriod = '" . $data ['Factperiod'] . "'");
+		$this->db->query("INSERT INTO `" . DB_PREFIX . "cycling_invoices` SET invoiceNumber = '" . $netxinvno  . "', cycling_id = '" . (int)$cycling_id . "',  customer_id = '" . (int)$data['customer_id'] . "', txnid = '" . $this->db->escape($data['txnid']) . "', status_id = '" . (int)$data['status_id'] . "', amount = '" . $this->db->escape($data['total']) . "',order_id = '" . (int)$data['order_id'] . "', date_added = '" . $data ['date_added'] . "', datePayed = '" . $data ['date_payed'] . "', dateExpire = '". $data ['date_expire'] . "', factPeriod = '" . $data ['Factperiod'] . "'");
 
 		$invoice_id = $this->db->getLastId();
 
@@ -54,8 +50,15 @@ class ModelCheckoutInvoices extends Model {
 	}
 
 
-        public function getMonthsPayed($order_id){
-            $cycling_query= $this->db->query("SELECT * FROM " . DB_PREFIX . "order_option WHERE  (name= 'Cycling Payment' OR name ='Ciclo de pago') AND order_id = '" . $order_id . "'");
+        public function getOrderProductById($data) {
+            $query= $this->db->query("SELECT * FROM  `" . DB_PREFIX . "order_product` WHERE order_id = '" . (int)$data['order_id'] . "' AND order_product_id = '" . (int)$data['order_product_id'] . "'");
+            return $query->rows;
+        }  
+
+
+
+        public function getMonthsPayed($order_id,$order_product_id){
+            $cycling_query= $this->db->query("SELECT * FROM " . DB_PREFIX . "order_option WHERE  (name= 'Cycling Payment' OR name ='Ciclo de pago') AND order_product_id = '" . (int)$order_product_id . "' AND order_id = '" . (int)$order_id . "'");
             $cycling = (isset($cycling_query->row['product_option_value_id']))?$cycling_query->row['product_option_value_id']:'0';
             if ($cycling){
                 //232 is the option value for cycling payment

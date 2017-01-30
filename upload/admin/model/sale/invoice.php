@@ -183,8 +183,35 @@ class ModelSaleInvoice extends Model {
                         return $invoice_status_data;
                 }
         }
-        
 
+        /*        
+         *Functions for cron Invoices 
+         *
+         */
+          public function getExpiringiPayment($daysbefore){
+
+              $dbquery = $this->db->query("SELECT * FROM " . DB_PREFIX . "cycling_payments WHERE expiringDate = dateExpire= DATE(now() + INTERVAL ". $daysbefore ." DAY)");
+                return $dbquery->rows;
+    
+            }
+          public function checkExistingCycleInvoice($data) {
+
+            /*
+                 $data['cycliing_id'];
+                 $datai['customer_id']
+                 $data['expiringDate']
+                 $data['product_id'];
+                 $data['fact_rediod']
+                  $data['next_expiration_date']
+
+            
+            */
+                $dbquery = $this->db->query("SELECT * FROM " . DB_PREFIX . "cycling_invoices WHERE customer_id = '" . (int)$data['customer_id'] . "' AND cycling_id = '" . (int)$data['cycliing_id']  . "' AND expiringDate = '". $data['next_expiration_date'] . "' AND factPeriod = '" . $data['fact_rediod'] . "'");
+                return $dbquery->rows;
+          
+            }
+
+        
 	public function getOrderProducts($order_id) {
 		$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "order_product WHERE order_id = '" . (int)$order_id . "'");
 
