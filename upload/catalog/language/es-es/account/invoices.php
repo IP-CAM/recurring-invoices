@@ -22,6 +22,7 @@ $_['text_success']          = '&Eacute;xito: Usted ha a&ntilde;adido <a href="%s
 $_['text_empty']            = 'No ha hecho ning&uacute;n pedido! ';
 $_['text_error']            = 'El pedido solicitado no se pudo encontrar!';
 $_['text_tax_number']       = 'NIF';
+$_['text_confirm_payment_method']   = 'Confirmar Métdódo de Pago';
 // Column
 $_['column_order_id']       = 'Pedido';
 $_['column_product']        = 'No. de Productos';

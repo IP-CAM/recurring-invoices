@@ -144,7 +144,7 @@ class ModelSaleInvoice extends Model {
 
         public function getInvoiceStatuses($data = array()) {
                 if ($data) {
-                        $sql = "SELECT * FROM " . DB_PREFIX . "mdx_cycling_invoices_status WHERE language_id = '" . (int)$this->config->get('config_language_id') . "'";
+                        $sql = "SELECT * FROM " . DB_PREFIX . "cycling_invoices_status WHERE language_id = '" . (int)$this->config->get('config_language_id') . "'";
 
                         $sql .= " ORDER BY name";
 
@@ -188,12 +188,61 @@ class ModelSaleInvoice extends Model {
          *Functions for cron Invoices 
          *
          */
-          public function getExpiringiPayment($daysbefore){
-
-              $dbquery = $this->db->query("SELECT * FROM " . DB_PREFIX . "cycling_payments WHERE expiringDate = dateExpire= DATE(now() + INTERVAL ". $daysbefore ." DAY)");
+          public function getExpiringPayment($interval){
+            //Calculate ecpirind date for each interval in $interval array
+            //change $interval array values from number of days to a date from today
+            foreach ($interval as &$item){
+                  $sub_period = " +" .$item . " days";
+                  $expiration_date = strtotime($sub_period, strtotime(date ( 'Y-m-d')));
+                  $item = date ( 'Y-m-d' , $expiration_date );
+            }
+            $days = join("','",$interval);
+            $sql = "SELECT * FROM " . DB_PREFIX . "cycling_payments WHERE expiringDate IN ('$days')";
+            /*
+            $numItems = count($interval);
+            $i = 0;
+            $sql = "SELECT * FROM " . DB_PREFIX . "cycling_payments WHERE";
+            //$intervals = implode (',' , $daysbefore);  
+            foreach ($intervals as $interval){
+              $sql .= " expiringDate = DATE(now() + INTERVAL ". $interval ." DAY";
+              if(++$i < $numItems) {
+                  $sql .= " OR";;
+              }
+            $sql .= " )";
+            */
+              //$dbquery = $this->db->query("SELECT * FROM " . DB_PREFIX . "cycling_payments WHERE expiringDate = DATE(now() + INTERVAL ". $daysbefore ." DAY)");
+              $dbquery = $this->db->query($sql);
                 return $dbquery->rows;
     
             }
+
+        public function getMonthsPayed($order_id,$order_product_id){
+            $cycling_query= $this->db->query("SELECT * FROM " . DB_PREFIX . "order_option WHERE  (name= 'Cycling Payment' OR name ='Ciclo de pago') AND order_product_id = '" . (int)$order_product_id . "' AND order_id = '" . (int)$order_id . "'");
+            $cycling = (isset($cycling_query->row['product_option_value_id']))?$cycling_query->row['product_option_value_id']:'0';
+            if ($cycling){
+                //232 is the option value for cycling payment
+                switch ($cycling){
+                case 31:
+                case 33:
+                case 47:
+                case 55:
+                  $months= 3;
+                  break;
+                case 32:
+                case 34:
+                case 48:
+                case 56:
+                  $months= 12;
+                  break;
+                default:
+                  $months = 1;
+                  break;
+                }
+                return $months;
+            }
+
+        }
+
           public function checkExistingCycleInvoice($data) {
 
             /*
@@ -206,10 +255,15 @@ class ModelSaleInvoice extends Model {
 
             
             */
-                $dbquery = $this->db->query("SELECT * FROM " . DB_PREFIX . "cycling_invoices WHERE customer_id = '" . (int)$data['customer_id'] . "' AND cycling_id = '" . (int)$data['cycliing_id']  . "' AND expiringDate = '". $data['next_expiration_date'] . "' AND factPeriod = '" . $data['fact_rediod'] . "'");
+                $dbquery = $this->db->query("SELECT * FROM " . DB_PREFIX . "cycling_invoices WHERE customer_id = '" . (int)$data['customer_id'] . "' AND cycling_id = '" . (int)$data['cycling_id']  . "' AND dateExpire= '". $data['date_expire'] . "' AND factPeriod = '" . $data['Factperiod'] . "'");
                 return $dbquery->rows;
           
             }
+
+        public function getOrderProductById($data) {
+            $query= $this->db->query("SELECT * FROM  `" . DB_PREFIX . "order_product` WHERE order_id = '" . (int)$data['order_id'] . "' AND order_product_id = '" . (int)$data['order_product_id'] . "'");
+            return $query->rows;
+        }
 
         
 	public function getOrderProducts($order_id) {
@@ -217,6 +271,31 @@ class ModelSaleInvoice extends Model {
 
 		return $query->rows;
 	}
+
+       public  function getnextInvNumber()
+      {
+
+        $inv_query= $this->db->query("SELECT * FROM  `" . DB_PREFIX . "cycling_invoices` ORDER BY invoice_id DESC LIMIT 1");
+        $last_inv_no = $inv_query->row['invoiceNumber'];
+        $parts=explode("-", $last_inv_no);
+        $lastyeainv=$parts[0];
+        $invnum=$parts[1];
+        if((!$last_inv_no) || (date('Y') != $lastyeainv))$invnum=0;
+        $inv_num=date('Y') .'-'. ($invnum+1);
+        return $inv_num;
+      }
+
+        public function addInvoice($data) {
+
+                $cycling_id = (isset($data ['cycling_id']))? $data ['cycling_id']:'0';
+                $netxinvno=$this->getnextInvNumber();
+                $this->db->query("INSERT INTO `" . DB_PREFIX . "cycling_invoices` SET invoiceNumber = '" . $netxinvno  . "', cycling_id = '" . (int)$cycling_id . "',  customer_id = '" . (int)$data['customer_id'] . "', txnid = '" . $this->db->escape($data['txnid']) . "', status_id = '" . (int)$data['status_id'] . "', amount = '" . $this->db->escape($data['amount']) . "',order_id = '" . (int)$data['order_id'] . "', date_added = '" . $data ['date_added'] . "', datePayed = '" . $data ['date_payed'] . "', dateExpire = '". $data ['date_expire'] . "', factPeriod = '" . $data ['Factperiod'] . "'");
+
+                $invoice_id = $this->db->getLastId();
+
+                return $invoice_id;
+        }
+
 
 	public function getOrderOptions($order_id, $order_product_id) {
 		$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "order_option WHERE order_id = '" . (int)$order_id . "' AND order_product_id = '" . (int)$order_product_id . "'");

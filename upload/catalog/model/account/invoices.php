@@ -8,7 +8,7 @@ class ModelAccountInvoices extends Model {
 
 
         public function getInvoice($invoice_id) {
-                $result = $this->db->query("SELECT o.*, os.name as status_id FROM `" . DB_PREFIX . "cycling_invoices` o LEFT JOIN " . DB_PREFIX . "cycling_invoices_status os ON (o.status_id = os.invoice_status_id) WHERE o.customer_id = '" . (int)$this->customer->getId() . "' AND os.language_id = '" . (int)$this->config->get('config_language_id') . "'");
+                $result = $this->db->query("SELECT o.*, os.name as status FROM `" . DB_PREFIX . "cycling_invoices` o LEFT JOIN " . DB_PREFIX . "cycling_invoices_status os ON (o.status_id = os.invoice_status_id) WHERE o.customer_id = '" . (int)$this->customer->getId() . "' AND o.invoice_id = '" . (int)$invoice_id . "' AND os.language_id = '" . (int)$this->config->get('config_language_id') . "'");
 
 //                $result= $this->db->query("SELECT * FROM `" . DB_PREFIX . "cycling_invoices` WHERE customer_id = '" . (int)$this->customer->getId() . "'");
                 if ($result->num_rows) {
@@ -18,6 +18,7 @@ class ModelAccountInvoices extends Model {
                                 'invoiceNumber'   => $result->row['invoiceNumber'],
                                 'factPeriod'   => $result->row['factPeriod'],
                                 'status_id'     => $result->row['status_id'],
+                                'status'        => $result->row['status'],
                                 'txnid'     => $result->row['txnid'],
                                 'date_added' => $result->row['date_added'],
                                 'datePayed'  => $result->row['datePayed'],   

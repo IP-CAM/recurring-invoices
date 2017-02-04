@@ -1,8 +1,9 @@
 <?php
 class ControllerAccountInvoices extends Controller {
 	public function index() {
+                unset($this->session->data['invoice_to_pay']);
 		if (!$this->customer->isLogged()) {
-			$this->session->data['redirect'] = $this->url->link('account/invoices.php', '', true);
+			$this->session->data['redirect'] = $this->url->link('account/invoices', '', true);
 
 			$this->response->redirect($this->url->link('account/login', '', true));
 		}
@@ -82,6 +83,7 @@ class ControllerAccountInvoices extends Controller {
                                 'total_invoices' => $invoices_total,
                                 'invoiceNumber'   => $result['invoiceNumber'],
                                 'factPeriod'   => $date1 . ' - ' . $date2,
+                                'invoice_status_id' => $result['status_id'],
 				'status'     => $result['status'],
 				'date_added' => date($this->language->get('date_format_short'), strtotime($result['date_added'])),
                                 'datePayed'  => date($this->language->get('date_format_short'), strtotime($result['datePayed'])),   
@@ -139,6 +141,7 @@ class ControllerAccountInvoices extends Controller {
                 $date1 = date($this->language->get('date_format_short'), strtotime($split_date[0]));
                 $date2 = date($this->language->get('date_format_short'), strtotime($split_date[1]));
                 //Invoice Data
+                $data['invoice_id'] = $invoice_id;
                 $data['invoiceNumber'] = $invoice_info['invoiceNumber'];
                 $data['factPeriod'] = $date1 . ' - ' . $date2;
                 $data['date_added'] = date($this->language->get('date_format_short'), strtotime($invoice_info['date_added']));
@@ -146,8 +149,15 @@ class ControllerAccountInvoices extends Controller {
                 $data['dateExpire'] = date($this->language->get('date_format_short'), strtotime($invoice_info['dateExpire']));
                 $data['amount'] = $this->currency->format($invoice_info['amount'], $order_info['currency_code'], $order_info['currency_value']);
                 $data['status_id'] = $invoice_info['status_id'];
+                $data['status'] = $invoice_info['status'];
                 $data['order_id'] = $invoice_info['order_id'];
                 $data['txnid'] = $invoice_info['txnid'];
+
+                
+                if ($data['status_id'] == '1' ) { 
+                  $data['datePayed']='';
+                  $this->session->data['invoice_to_pay'] = $data;
+                }
 
 
 		if ($invoice_info) {
@@ -196,7 +206,8 @@ class ControllerAccountInvoices extends Controller {
 			$data['text_no_results'] = $this->language->get('text_no_results');
                         $data['text_tax_number'] =  $this->language->get('text_tax_number');
                         $data['text_facturation_period'] = $this->language->get('text_facturation_period');
-
+                  
+                        $data['text_confirm_payment_method'] = $this->language->get('text_confirm_payment_method');
 			$data['column_name'] = $this->language->get('column_name');
 			$data['column_model'] = $this->language->get('column_model');
 			$data['column_quantity'] = $this->language->get('column_quantity');
@@ -224,8 +235,14 @@ class ControllerAccountInvoices extends Controller {
 
                         $server = $this->config->get('config_url');
                         $data['store_logo'] = $server . 'image/' . $this->config->get('config_logo');
+                        
+                        if (isset($this->session->data['payment_method']['code'])) {
+                            $data['code'] = $this->session->data['payment_method']['code'];
+                        } else {
+                            $data['code'] = '';
+                        }
 
-
+            
 
 			if (isset($this->session->data['error'])) {
 				$data['error_warning'] = $this->session->data['error'];
@@ -248,7 +265,7 @@ class ControllerAccountInvoices extends Controller {
 			} else {
 				$data['invoice_no'] = '';
 			}
-			$data['invoice_id'] = $invoice_info['invoiceNumber'];;
+			//$data['invoice_id'] = $invoice_info['invoiceNumber'];;
 			$data['date_added'] = date($this->language->get('date_format_short'), strtotime($order_info['date_added']));
 
 			if ($order_info['payment_address_format']) {
@@ -257,6 +274,11 @@ class ControllerAccountInvoices extends Controller {
 				$format = '{firstname} {lastname}' . "\n" . '{company}' . "\n" . '{address_1}' . "\n" . '{address_2}' . "\n" . '{city} {postcode}' . "\n" . '{zone}' . "\n" . '{country}';
 			}
 
+                        //Use default address fro invoices
+                        $this->load->model('account/address');
+                        $address_id = $this->getdefaultAddressId();
+                        $address_id = $address_id->row['address_id'];
+                        $default_addres= $this->model_account_address->getAddress($address_id);
 			$find = array(
 				'{firstname}',
 				'{lastname}',
@@ -271,21 +293,22 @@ class ControllerAccountInvoices extends Controller {
 			);
 
 			$replace = array(
-				'firstname' => $order_info['payment_firstname'],
-				'lastname'  => $order_info['payment_lastname'],
-				'company'   => $order_info['payment_company'],
-				'address_1' => $order_info['payment_address_1'],
-				'address_2' => $order_info['payment_address_2'],
-				'city'      => $order_info['payment_city'],
-				'postcode'  => $order_info['payment_postcode'],
-				'zone'      => $order_info['payment_zone'],
-				'zone_code' => $order_info['payment_zone_code'],
-				'country'   => $order_info['payment_country']
+				'firstname' => $default_addres['firstname'],
+				'lastname'  => $default_addres['lastname'],
+				'company'   => $default_addres['company'],
+				'address_1' => $default_addres['address_1'],
+				'address_2' => $default_addres['address_2'],
+				'city'      => $default_addres['city'],
+				'postcode'  => $default_addres['postcode'],
+				'zone'      => $default_addres['zone'],
+				'zone_code' => $default_addres['zone_code'],
+				'country'   => $default_addres['country']
 			);
 
 			$data['payment_address'] = str_replace(array("\r\n", "\r", "\n"), '<br />', preg_replace(array("/\s\s+/", "/\r\r+/", "/\n\n+/"), '<br />', trim(str_replace($find, $replace, $format))));
 
-			$data['payment_method'] = $order_info['payment_method'];
+
+			$data['order_payment_method'] = $order_info['payment_method'];
 
 			if ($order_info['shipping_address_format']) {
 				$format = $order_info['shipping_address_format'];
@@ -378,6 +401,8 @@ class ControllerAccountInvoices extends Controller {
 				);
 			}
 
+
+
 			// Voucher
 			$data['vouchers'] = array();
 
@@ -402,7 +427,16 @@ class ControllerAccountInvoices extends Controller {
 				);
 			}
 
+                        if ($data['status_id'] == '1' ) { 
+                          $this->session->data['invoice_to_pay']['vouchers'] = $data['vouchers'];
+                          $this->session->data['invoice_to_pay']['products'] = $data['products'];
+                          $this->session->data['invoice_to_pay']['totals'] = $data['totals'];
+                        }
+
+
 			$data['comment'] = nl2br($order_info['comment']);
+
+
 
 			// History
 			$data['histories'] = array();
@@ -417,6 +451,88 @@ class ControllerAccountInvoices extends Controller {
 				);
 			}
 
+
+
+                        // Dont' really Know what am I doing
+                unset($this->session->data['payment_address']);
+                $this->load->language('checkout/checkout');
+                $this->session->data['payment_address'] = $this->model_account_address->getAddress($address_id);
+                if (isset($this->session->data['payment_address'])) {
+                        // Totals
+                        $totals = array();
+                        $taxes = $this->getTaxes($products);
+                        //Number of addresses?
+                        $totala = 1;
+                  
+                        // Because __call can not keep var references so we put them into an array.
+                        $total_data = array(
+                                'totals' => &$totals,
+                                'taxes'  => &$taxes,
+                                'total'  => &$totala
+                        );
+                        $this->load->model('extension/extension');
+
+                        $sort_order = array();
+
+                        $results = $this->model_extension_extension->getExtensions('total');
+                        foreach ($results as $key => $value) {
+                                $sort_order[$key] = $this->config->get($value['code'] . '_sort_order');
+                        }
+
+                        array_multisort($sort_order, SORT_ASC, $results);
+
+                        foreach ($results as $result) {
+                                if ($this->config->get($result['code'] . '_status')) {
+                                        $this->load->model('extension/total/' . $result['code']);
+
+                                        // We have to put the totals in an array so that they pass by reference.
+                                        $this->{'model_extension_total_' . $result['code']}->getTotal($total_data);
+                                }
+                        }
+
+
+                        // Payment Methods
+                        $method_data = array();
+
+                        $this->load->model('extension/extension');
+
+                        $results = $this->model_extension_extension->getExtensions('payment');
+                        $recurring = $this->cart->hasRecurringProducts();
+                       // $this->session->data['payment_address']['country_id'] = $this->session->data['shipping_address']['country_id'];
+                       // $this->session->data['payment_address']['zone_id'] = $this->session->data['shipping_address']['zone_id'];
+                        foreach ($results as $result) {
+                                if ($this->config->get($result['code'] . '_status')) {
+                                        $this->load->model('extension/payment/' . $result['code']);
+
+                                        $method = $this->{'model_extension_payment_' . $result['code']}->getMethod($this->session->data['payment_address'], $totala);
+                                        if ($method) {
+                                                if ($recurring) {
+                                                        if (property_exists($this->{'model_extension_payment_' . $result['code']}, 'recurringPayments') && $this->{'model_extension_payment_' . $result['code']}->recurringPayments()) {
+                                                                $method_data[$result['code']] = $method;
+                                                        }
+                                                } else {
+                                                        $method_data[$result['code']] = $method;
+                                                }
+                                        }
+                                }
+                        }
+
+                        $sort_order = array();
+                        foreach ($method_data as $key => $value) {
+                                $sort_order[$key] = $value['sort_order'];
+                        }
+
+                        array_multisort($sort_order, SORT_ASC, $method_data);
+
+                        $this->session->data['payment_methods'] = $method_data;
+                        $data['payment_methods'] = $method_data;
+                }
+
+
+
+
+
+
 			$data['continue'] = $this->url->link('account/invoices', '', true);
 
 			$data['column_left'] = $this->load->controller('common/column_left');
@@ -425,6 +541,8 @@ class ControllerAccountInvoices extends Controller {
 			$data['content_bottom'] = $this->load->controller('common/content_bottom');
 			$data['footer'] = $this->load->controller('common/footer');
 			$data['header'] = $this->load->controller('common/header');
+                       
+                        $data['gateway'] = $this->load->controller('extension/payment/gateway');
 
 			$this->response->setOutput($this->load->view('account/invoices_info', $data));
 		} else {
@@ -466,9 +584,48 @@ class ControllerAccountInvoices extends Controller {
 			$data['content_bottom'] = $this->load->controller('common/content_bottom');
 			$data['footer'] = $this->load->controller('common/footer');
 			$data['header'] = $this->load->controller('common/header');
+                      
+                       // $data['payment'] = $this->load->controller('extension/payment/' . $this->session->data['payment_method']['code']); 
 
+                        //Set a middle gateway before going to choosen paymeny page
+                        // This file will redirect all data to controller/extension/payment/pp_standard
+                        // which will then redirect paypal
+                        $data['gatewar'] = $this->load->controller('extension/payment/gateway');
 			$this->response->setOutput($this->load->view('error/not_found', $data));
 		}
 	}
+
+
+
+        //Get taxes for current Invoice (the default getTaxes looks into cart
+        public function getTaxes($products) {
+
+                $tax_data = array();
+
+                foreach ($products as $product) {
+                                $product_query = $this->db->query("SELECT * FROM " . DB_PREFIX . "product_to_store p2s LEFT JOIN " . DB_PREFIX . "product p ON (p2s.product_id = p.product_id) LEFT JOIN " . DB_PREFIX . "product_description pd ON (p.product_id = pd.product_id) WHERE p2s.store_id = '" . (int)$this->config->get('config_store_id') . "' AND p2s.product_id = '" . (int)$product['product_id'] . "' AND pd.language_id = '" . (int)$this->config->get('config_language_id') . "' AND p.date_available <= NOW() AND p.status = '1'");
+                        //var_dump ($product_query);      
+                        if ($product_query->num_rows) {
+                                
+                                $tax_rates = $this->cart->tax->getRates($product_query->row['price'], $product_query->row['tax_class_id']);
+                                foreach ($tax_rates as $tax_rate) {
+                                        if (!isset($tax_data[$tax_rate['tax_rate_id']])) {
+                                                $tax_data[$tax_rate['tax_rate_id']] = ($tax_rate['amount'] * $product['quantity']);
+                                        } else {
+                                                $tax_data[$tax_rate['tax_rate_id']] += ($tax_rate['amount'] * $product['quantity']);
+                                        }
+                                }
+                        }
+                }
+
+                return $tax_data;
+        }
+
+        public function getdefaultAddressId(){
+           $address_id = $this->db->query("SELECT address_id FROM " . DB_PREFIX . "customer  WHERE customer_id = '" . (int)$this->customer->getId() . "'"); 
+        return $address_id;
+
+        }
+          
 
 }
