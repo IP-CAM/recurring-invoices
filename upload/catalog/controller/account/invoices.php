@@ -223,7 +223,7 @@ class ControllerAccountInvoices extends Controller {
 			$data['button_reorder'] = $this->language->get('button_reorder');
 			$data['button_return'] = $this->language->get('button_return');
 			$data['button_continue'] = $this->language->get('button_continue');
-
+                        $data['text_back'] = $this->language->get('text_back');
 
                         //Store Data
                         $data['store_name'] = $this->config->get('config_name');
@@ -397,7 +397,10 @@ class ControllerAccountInvoices extends Controller {
 					'price'    => $this->currency->format($product['price'] + ($this->config->get('config_tax') ? $product['tax'] : 0), $order_info['currency_code'], $order_info['currency_value']),
 					'total'    => $this->currency->format($product['total'] + ($this->config->get('config_tax') ? ($product['tax'] * $product['quantity']) : 0), $order_info['currency_code'], $order_info['currency_value']),
 					//'reorder'  => $reorder,
-					'return'   => $this->url->link('account/return/add', 'order_id=' . $order_info['order_id'] . '&product_id=' . $product['product_id'], true)
+					'return'   => $this->url->link('account/return/add', 'order_id=' . $order_info['order_id'] . '&product_id=' . $product['product_id'], true),
+                                        //We don't use recurring payments like that. Need to set nar inr order to use confirm.tpl
+                                        'recurring' => '',
+                                        'href'       => $this->url->link('product/product', 'product_id=' . $product['product_id'])
 				);
 			}
 
@@ -427,11 +430,6 @@ class ControllerAccountInvoices extends Controller {
 				);
 			}
 
-                        if ($data['status_id'] == '1' ) { 
-                          $this->session->data['invoice_to_pay']['vouchers'] = $data['vouchers'];
-                          $this->session->data['invoice_to_pay']['products'] = $data['products'];
-                          $this->session->data['invoice_to_pay']['totals'] = $data['totals'];
-                        }
 
 
 			$data['comment'] = nl2br($order_info['comment']);
@@ -529,6 +527,11 @@ class ControllerAccountInvoices extends Controller {
                 }
 
 
+                        if ($data['status_id'] == '1' ) {
+                          $this->session->data['invoice_to_pay']['vouchers'] = $data['vouchers'];
+                          $this->session->data['invoice_to_pay']['products'] = $data['products'];
+                          $this->session->data['invoice_to_pay']['totals'] = $data['totals'];
+                        }
 
 
 
@@ -543,7 +546,6 @@ class ControllerAccountInvoices extends Controller {
 			$data['header'] = $this->load->controller('common/header');
                        
                         $data['gateway'] = $this->load->controller('extension/payment/gateway');
-
 			$this->response->setOutput($this->load->view('account/invoices_info', $data));
 		} else {
 			$this->document->setTitle($this->language->get('text_order'));
@@ -553,6 +555,7 @@ class ControllerAccountInvoices extends Controller {
 			$data['text_error'] = $this->language->get('text_error');
 
 			$data['button_continue'] = $this->language->get('button_continue');
+                        $data['text_back'] = $this->language->get('text_back');
 
 			$data['breadcrumbs'] = array();
 
@@ -587,10 +590,6 @@ class ControllerAccountInvoices extends Controller {
                       
                        // $data['payment'] = $this->load->controller('extension/payment/' . $this->session->data['payment_method']['code']); 
 
-                        //Set a middle gateway before going to choosen paymeny page
-                        // This file will redirect all data to controller/extension/payment/pp_standard
-                        // which will then redirect paypal
-                        $data['gatewar'] = $this->load->controller('extension/payment/gateway');
 			$this->response->setOutput($this->load->view('error/not_found', $data));
 		}
 	}

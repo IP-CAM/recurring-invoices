@@ -23,6 +23,8 @@ $_['text_empty']            = 'No ha hecho ning&uacute;n pedido! ';
 $_['text_error']            = 'El pedido solicitado no se pudo encontrar!';
 $_['text_tax_number']       = 'NIF';
 $_['text_confirm_payment_method']   = 'Confirmar Métdódo de Pago';
+$_['text_back']             = 'Volver al listado';
+
 // Column
 $_['column_order_id']       = 'Pedido';
 $_['column_product']        = 'No. de Productos';
